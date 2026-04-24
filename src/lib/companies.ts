@@ -56,10 +56,10 @@ export function deleteCompany(id: string): void {
 }
 
 export const PHASE_STYLES: Record<string, string> = {
-  "1次面接": "bg-blue-50 text-blue-700 border border-blue-200",
-  "2次面接": "bg-orange-50 text-orange-700 border border-orange-200",
-  "最終面接": "bg-red-50 text-red-700 border border-red-200",
-  "内定": "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  "1次面接": "bg-[rgba(10,25,47,0.06)] text-[#526173] border border-[rgba(10,25,47,0.12)]",
+  "2次面接": "bg-[rgba(10,25,47,0.11)] text-[#0c1c31] border border-[rgba(10,25,47,0.18)]",
+  "最終面接": "bg-[#0c1c31] text-white border border-[#0c1c31]",
+  "内定": "bg-[#d1af61] text-[#0c1c31] border border-[#d1af61]",
 };
 
 export const PHASE_ORDER = ["1次面接", "2次面接", "最終面接", "内定"];

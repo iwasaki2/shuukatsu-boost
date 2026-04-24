@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AnimateIn } from "@/components/AnimateIn";
+import { MobileNav } from "@/components/MobileNav";
 
 const strengths = [
   "志望企業ごとに面接回答を最適化",
@@ -37,10 +39,10 @@ const serviceHighlights = [
 ];
 
 const metrics = [
-  { value: "10,000+", label: "利用就活生" },
-  { value: "3 sec", label: "平均生成時間" },
-  { value: "87%", label: "継続利用率" },
-  { value: "24h", label: "いつでも改善" },
+  { value: "3 steps", label: "入力から生成まで" },
+  { value: "8 items", label: "自動生成コンテンツ" },
+  { value: "2社", label: "無料でお試し" },
+  { value: "24h", label: "いつでも再生成" },
 ];
 
 const featureCards = [
@@ -138,38 +140,54 @@ const plans = [
   },
 ];
 
+const footerNav = [
+  { href: "#concept", label: "コンセプト" },
+  { href: "#service", label: "機能一覧" },
+  { href: "#pricing", label: "料金プラン" },
+];
+
+const footerService = [
+  { href: "/input", label: "面接対策を始める" },
+  { href: "/companies", label: "選考一覧を見る" },
+];
+
 export default function Home() {
   return (
     <main className="bg-[var(--paper)] text-[var(--ink)]">
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[rgba(10,25,47,0.76)] backdrop-blur-xl">
+
+      {/* ── Announcement bar ─────────────────────────────── */}
+      <div className="border-b border-white/8 bg-[var(--navy)] py-2.5 text-center text-xs tracking-[0.14em] text-white/55">
+        AI就活面接対策 — 初回2社まで
+        <span className="mx-1 font-semibold text-[var(--gold-soft)]">完全無料</span>
+        でご利用いただけます
+      </div>
+
+      {/* ── Header ───────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[rgba(10,25,47,0.80)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           <div>
             <p className="font-serif text-2xl tracking-[0.14em] text-white">就活Boost</p>
             <p className="text-[10px] uppercase tracking-[0.45em] text-white/45">Interview Intelligence</p>
           </div>
           <nav className="hidden items-center gap-8 text-sm text-white/70 md:flex">
-            <a href="#concept" className="transition hover:text-white">
-              コンセプト
-            </a>
-            <a href="#service" className="transition hover:text-white">
-              機能
-            </a>
-            <a href="#pricing" className="transition hover:text-white">
-              料金
-            </a>
-            <Link href="/companies" className="transition hover:text-white">
-              選考一覧
-            </Link>
+            <a href="#concept" className="transition hover:text-white">コンセプト</a>
+            <a href="#service" className="transition hover:text-white">機能</a>
+            <a href="#pricing" className="transition hover:text-white">料金</a>
+            <Link href="/companies" className="transition hover:text-white">選考一覧</Link>
           </nav>
-          <Link
-            href="/input"
-            className="rounded-full border border-[var(--gold)] bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
-          >
-            無料で始める
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/input"
+              className="hidden rounded-full border border-[var(--gold)] bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d] md:inline-flex"
+            >
+              無料で始める
+            </Link>
+            <MobileNav />
+          </div>
         </div>
       </header>
 
+      {/* ── Hero ─────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-[var(--navy)] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-30"
@@ -179,26 +197,27 @@ export default function Home() {
           }}
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(209,175,97,0.24),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(74,123,160,0.25),transparent_28%)]" />
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-24">
+
+        <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-28">
           <div className="max-w-3xl">
-            <p className="mb-5 text-xs uppercase tracking-[0.45em] text-[var(--gold-soft)]">
+            <p className="hero-1 mb-5 text-xs uppercase tracking-[0.45em] text-[var(--gold-soft)]">
               AI Interview Platform For Serious Candidates
             </p>
-            <h1 className="max-w-4xl font-serif text-5xl leading-[1.05] tracking-[0.02em] text-white md:text-7xl">
+            <h1 className="hero-2 max-w-4xl font-serif text-5xl leading-[1.05] tracking-[0.02em] text-white md:text-7xl">
               面接対策を、
               <br />
               企業に通じる
               <br />
               企画へ変える。
             </h1>
-            <p className="mt-8 max-w-2xl text-base leading-8 text-white/72 md:text-lg">
+            <p className="hero-3 mt-8 max-w-2xl text-base leading-8 text-white/72 md:text-lg">
               就活Boostは、就活生の経験を企業別の説得力に変換する面接設計ツールです。
               テンプレートを並べるのではなく、志望企業ごとに通り方を再設計します。
             </p>
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+            <div className="hero-4 mt-10 flex flex-col gap-4 sm:flex-row">
               <Link
                 href="/input"
-                className="rounded-full bg-[var(--gold)] px-8 py-4 text-center text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+                className="shimmer-btn rounded-full bg-[var(--gold)] px-8 py-4 text-center text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
               >
                 面接対策を始める
               </Link>
@@ -209,7 +228,7 @@ export default function Home() {
                 選考中企業を見る
               </Link>
             </div>
-            <div className="mt-10 grid gap-3 md:grid-cols-3">
+            <div className="hero-5 mt-10 grid gap-3 md:grid-cols-3">
               {strengths.map((item) => (
                 <div key={item} className="rounded-2xl border border-white/10 bg-white/6 px-4 py-4 text-sm text-white/78 backdrop-blur-sm">
                   {item}
@@ -218,8 +237,8 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="self-end">
-            <div className="rounded-[2rem] border border-white/10 bg-[rgba(255,255,255,0.08)] p-4 shadow-[0_32px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+          <div className="hero-card self-end">
+            <div className="animate-float rounded-[2rem] border border-white/10 bg-[rgba(255,255,255,0.08)] p-4 shadow-[0_32px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
               <div className="overflow-hidden rounded-[1.5rem] bg-white text-[var(--ink)]">
                 <div
                   className="h-60 bg-cover bg-center"
@@ -266,102 +285,116 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
 
-      <section className="border-b border-[var(--line)] bg-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 md:grid-cols-4 lg:px-8">
-          {metrics.map((metric) => (
-            <div key={metric.label} className="border-l border-[var(--line)] pl-5 first:border-l-0 first:pl-0">
-              <p className="font-serif text-4xl text-[var(--navy)]">{metric.value}</p>
-              <p className="mt-2 text-sm tracking-[0.18em] text-[var(--muted)] uppercase">{metric.label}</p>
-            </div>
-          ))}
+        {/* Scroll indicator */}
+        <div className="hero-5 absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex">
+          <p className="text-[10px] uppercase tracking-[0.38em] text-white/30">Scroll</p>
+          <div className="relative h-8 w-px overflow-hidden rounded-full bg-white/15">
+            <div className="animate-scroll-down absolute inset-x-0 top-0 h-3 rounded-full bg-white/55" />
+          </div>
         </div>
       </section>
 
+      {/* ── Metrics ──────────────────────────────────────── */}
+      <AnimateIn>
+        <section className="border-b border-[var(--line)] bg-white">
+          <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 md:grid-cols-4 lg:px-8">
+            {metrics.map((metric) => (
+              <div key={metric.label} className="border-l border-[var(--line)] pl-5 first:border-l-0 first:pl-0">
+                <p className="font-serif text-4xl text-[var(--navy)]">{metric.value}</p>
+                <p className="mt-2 text-sm uppercase tracking-[0.18em] text-[var(--muted)]">{metric.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </AnimateIn>
+
+      {/* ── Concept ──────────────────────────────────────── */}
       <section id="concept" className="bg-[var(--paper)] py-20 lg:py-28">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
-          <div className="max-w-xl">
+          <AnimateIn className="max-w-xl">
             <p className="text-xs uppercase tracking-[0.38em] text-[var(--accent)]">Concept</p>
             <h2 className="mt-5 font-serif text-4xl leading-tight text-[var(--navy)] md:text-5xl">
-              上質なUIは、
+              企業の意図を読んで、
               <br />
-              迷わず動けるUXで完成する。
+              通じる言葉を設計する。
             </h2>
             <p className="mt-6 text-base leading-8 text-[var(--ink-soft)]">
-              参考サイトのような静かな高級感を土台にしつつ、就活サービスとして必要な情報導線は明確に。
-              写真、余白、タイポグラフィ、カードの密度を整理して、使う前から信頼できる印象へ引き上げました。
+              AIの力だけに頼らない設計です。企業研究のメモ、選考フェーズ、過去の面接の手応えを積み重ねることで、
+              生成される内容の解像度は回を追うごとに高まっていきます。
             </p>
-          </div>
+          </AnimateIn>
           <div className="grid gap-5 md:grid-cols-2">
-            {featureCards.map((card) => (
-              <article
-                key={card.title}
-                className="rounded-[1.75rem] border border-[var(--line)] bg-white p-7 shadow-[0_24px_60px_rgba(10,25,47,0.08)]"
-              >
-                <p className="text-xs uppercase tracking-[0.32em] text-[var(--accent)]">{card.label}</p>
-                <h3 className="mt-4 font-serif text-2xl leading-tight text-[var(--navy)]">{card.title}</h3>
-                <p className="mt-4 text-sm leading-7 text-[var(--ink-soft)]">{card.description}</p>
-              </article>
+            {featureCards.map((card, i) => (
+              <AnimateIn key={card.title} delay={i * 80}>
+                <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-7 shadow-[0_24px_60px_rgba(10,25,47,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_rgba(10,25,47,0.14)]">
+                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--accent)]">{card.label}</p>
+                  <h3 className="mt-4 font-serif text-2xl leading-tight text-[var(--navy)]">{card.title}</h3>
+                  <p className="mt-4 text-sm leading-7 text-[var(--ink-soft)]">{card.description}</p>
+                </article>
+              </AnimateIn>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ── Service Design ───────────────────────────────── */}
       <section id="service" className="bg-white py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="mb-14 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <AnimateIn className="mb-14 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <p className="text-xs uppercase tracking-[0.38em] text-[var(--accent)]">Service Design</p>
               <h2 className="mt-5 font-serif text-4xl leading-tight text-[var(--navy)] md:text-5xl">
-                写真と情報の質感を合わせ、
+                就活のフローごとに、
                 <br />
-                サービス価値を一段上で見せる。
+                必要なアクションがつながる。
               </h2>
             </div>
             <p className="max-w-xl text-sm leading-8 text-[var(--ink-soft)]">
-              ただの機能一覧ではなく、ユーザーがどの局面でどう助かるかを体感できる見せ方に変更。
-              企業サイトの信頼感と、SaaSの使いやすさを両立させています。
+              機能を揃えるだけでなく、企業研究・面接準備・改善サイクルを一つのプラットフォームで完結させる設計にしました。
             </p>
-          </div>
+          </AnimateIn>
 
           <div className="grid gap-8">
             {serviceHighlights.map((item, index) => (
-              <article
-                key={item.id}
-                className={`grid overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--paper)] shadow-[0_32px_80px_rgba(10,25,47,0.08)] lg:grid-cols-2 ${
-                  index % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
-                }`}
-              >
-                <div
-                  className="min-h-[320px] bg-cover bg-center"
-                  style={{
-                    backgroundImage: `linear-gradient(180deg, rgba(9,22,43,0.18), rgba(9,22,43,0.5)), url('${item.image}')`,
-                  }}
-                />
-                <div className="flex flex-col justify-center p-8 lg:p-12">
-                  <p className="text-xs uppercase tracking-[0.35em] text-[var(--accent)]">
-                    {item.id} / {item.title}
-                  </p>
-                  <h3 className="mt-5 font-serif text-3xl leading-tight text-[var(--navy)]">{item.heading}</h3>
-                  <p className="mt-6 text-sm leading-8 text-[var(--ink-soft)]">{item.copy}</p>
-                  <Link
-                    href="/input"
-                    className="mt-8 inline-flex w-fit items-center rounded-full border border-[var(--navy)] px-5 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[var(--navy)] hover:text-white"
-                  >
-                    この流れで試す
-                  </Link>
-                </div>
-              </article>
+              <AnimateIn key={item.id} delay={index * 80}>
+                <article
+                  className={`group grid overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--paper)] shadow-[0_32px_80px_rgba(10,25,47,0.08)] transition duration-300 hover:shadow-[0_40px_100px_rgba(10,25,47,0.14)] lg:grid-cols-2 ${
+                    index % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
+                  }`}
+                >
+                  <div className="relative min-h-[320px] overflow-hidden">
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                      style={{ backgroundImage: `url('${item.image}')` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[rgba(9,22,43,0.18)] to-[rgba(9,22,43,0.5)]" />
+                  </div>
+                  <div className="flex flex-col justify-center p-8 lg:p-12">
+                    <p className="text-xs uppercase tracking-[0.35em] text-[var(--accent)]">
+                      {item.id} / {item.title}
+                    </p>
+                    <h3 className="mt-5 font-serif text-3xl leading-tight text-[var(--navy)]">{item.heading}</h3>
+                    <p className="mt-6 text-sm leading-8 text-[var(--ink-soft)]">{item.copy}</p>
+                    <Link
+                      href="/input"
+                      className="mt-8 inline-flex w-fit items-center rounded-full border border-[var(--navy)] px-5 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[var(--navy)] hover:text-white"
+                    >
+                      この流れで試す
+                    </Link>
+                  </div>
+                </article>
+              </AnimateIn>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ── How It Works ─────────────────────────────────── */}
       <section className="bg-[var(--navy)] py-20 text-white lg:py-28">
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">
-            <div>
+            <AnimateIn>
               <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">How It Works</p>
               <h2 className="mt-5 font-serif text-4xl leading-tight md:text-5xl">
                 面接準備を、
@@ -371,97 +404,105 @@ export default function Home() {
               <p className="mt-6 max-w-lg text-sm leading-8 text-white/68">
                 準備、生成、改善までの流れを一つのシステムに閉じ込めることで、就活中の思考コストを減らします。
               </p>
-            </div>
+            </AnimateIn>
             <div className="grid gap-5 md:grid-cols-2">
-              {flow.map((item) => (
-                <div key={item.step} className="rounded-[1.75rem] border border-white/10 bg-white/6 p-6 backdrop-blur-sm">
-                  <p className="font-serif text-4xl text-[var(--gold-soft)]">{item.step}</p>
-                  <h3 className="mt-4 text-xl font-semibold text-white">{item.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-white/72">{item.text}</p>
-                </div>
+              {flow.map((item, i) => (
+                <AnimateIn key={item.step} delay={i * 80}>
+                  <div className="rounded-[1.75rem] border border-white/10 bg-white/6 p-6 backdrop-blur-sm transition duration-300 hover:bg-white/10">
+                    <p className="font-serif text-4xl text-[var(--gold-soft)]">{item.step}</p>
+                    <h3 className="mt-4 text-xl font-semibold text-white">{item.title}</h3>
+                    <p className="mt-4 text-sm leading-7 text-white/72">{item.text}</p>
+                  </div>
+                </AnimateIn>
               ))}
             </div>
           </div>
         </div>
       </section>
 
+      {/* ── User Voices ──────────────────────────────────── */}
       <section className="bg-white py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="mb-12 max-w-2xl">
+          <AnimateIn className="mb-12 max-w-2xl">
             <p className="text-xs uppercase tracking-[0.38em] text-[var(--accent)]">User Voices</p>
             <h2 className="mt-5 font-serif text-4xl leading-tight text-[var(--navy)] md:text-5xl">
               実際の就活の現場で、
               <br />
               使い続けられる設計へ。
             </h2>
-          </div>
+          </AnimateIn>
           <div className="grid gap-6 lg:grid-cols-3">
-            {voices.map((voice) => (
-              <article
-                key={voice.title}
-                className="rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-7 shadow-[0_20px_60px_rgba(10,25,47,0.07)]"
-              >
-                <p className="font-serif text-2xl leading-tight text-[var(--navy)]">{voice.title}</p>
-                <p className="mt-5 text-sm leading-8 text-[var(--ink-soft)]">{voice.body}</p>
-                <p className="mt-8 text-xs uppercase tracking-[0.28em] text-[var(--muted)]">{voice.meta}</p>
-              </article>
+            {voices.map((voice, i) => (
+              <AnimateIn key={voice.title} delay={i * 80}>
+                <article className="h-full rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-7 shadow-[0_20px_60px_rgba(10,25,47,0.07)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_80px_rgba(10,25,47,0.12)]">
+                  <p className="font-serif text-2xl leading-tight text-[var(--navy)]">{voice.title}</p>
+                  <p className="mt-5 text-sm leading-8 text-[var(--ink-soft)]">{voice.body}</p>
+                  <p className="mt-8 text-xs uppercase tracking-[0.28em] text-[var(--muted)]">{voice.meta}</p>
+                </article>
+              </AnimateIn>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ── Pricing ──────────────────────────────────────── */}
       <section id="pricing" className="bg-[var(--paper)] py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="mb-12 text-center">
+          <AnimateIn className="mb-12 text-center">
             <p className="text-xs uppercase tracking-[0.38em] text-[var(--accent)]">Pricing</p>
             <h2 className="mt-5 font-serif text-4xl leading-tight text-[var(--navy)] md:text-5xl">
               必要な深さに応じて選べる、
               <br />
               シンプルな料金設計。
             </h2>
-          </div>
+          </AnimateIn>
           <div className="grid gap-6 lg:grid-cols-3">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`rounded-[2rem] border p-8 ${
-                  plan.featured
-                    ? "border-[var(--navy)] bg-[var(--navy)] text-white shadow-[0_28px_80px_rgba(10,25,47,0.24)]"
-                    : "border-[var(--line)] bg-white text-[var(--ink)]"
-                }`}
-              >
-                <p className={`text-xs uppercase tracking-[0.35em] ${plan.featured ? "text-[var(--gold-soft)]" : "text-[var(--accent)]"}`}>
-                  {plan.note}
-                </p>
-                <h3 className="mt-5 font-serif text-3xl">{plan.name}</h3>
-                <p className="mt-4 text-4xl font-semibold">{plan.price}<span className="ml-1 text-sm font-normal opacity-70">/ 月</span></p>
-                <ul className={`mt-8 grid gap-3 text-sm leading-7 ${plan.featured ? "text-white/80" : "text-[var(--ink-soft)]"}`}>
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <span className={plan.featured ? "text-[var(--gold-soft)]" : "text-[var(--accent)]"}>●</span>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/input"
-                  className={`mt-8 inline-flex rounded-full px-6 py-3 text-sm font-semibold transition ${
+            {plans.map((plan, i) => (
+              <AnimateIn key={plan.name} delay={i * 100}>
+                <div
+                  className={`h-full rounded-[2rem] border p-8 transition duration-300 hover:-translate-y-1 ${
                     plan.featured
-                      ? "bg-[var(--gold)] text-[var(--navy)] hover:bg-[#f8d58d]"
-                      : "border border-[var(--navy)] text-[var(--navy)] hover:bg-[var(--navy)] hover:text-white"
+                      ? "border-[var(--navy)] bg-[var(--navy)] text-white shadow-[0_28px_80px_rgba(10,25,47,0.24)] hover:shadow-[0_40px_100px_rgba(10,25,47,0.32)]"
+                      : "border-[var(--line)] bg-white text-[var(--ink)] hover:shadow-[0_28px_80px_rgba(10,25,47,0.12)]"
                   }`}
                 >
-                  このプランで始める
-                </Link>
-              </div>
+                  <p className={`text-xs uppercase tracking-[0.35em] ${plan.featured ? "text-[var(--gold-soft)]" : "text-[var(--accent)]"}`}>
+                    {plan.note}
+                  </p>
+                  <h3 className="mt-5 font-serif text-3xl">{plan.name}</h3>
+                  <p className="mt-4 text-4xl font-semibold">
+                    {plan.price}
+                    <span className="ml-1 text-sm font-normal opacity-70">/ 月</span>
+                  </p>
+                  <ul className={`mt-8 grid gap-3 text-sm leading-7 ${plan.featured ? "text-white/80" : "text-[var(--ink-soft)]"}`}>
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3">
+                        <span className={plan.featured ? "text-[var(--gold-soft)]" : "text-[var(--accent)]"}>●</span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/input"
+                    className={`mt-8 inline-flex rounded-full px-6 py-3 text-sm font-semibold transition ${
+                      plan.featured
+                        ? "bg-[var(--gold)] text-[var(--navy)] hover:bg-[#f8d58d]"
+                        : "border border-[var(--navy)] text-[var(--navy)] hover:bg-[var(--navy)] hover:text-white"
+                    }`}
+                  >
+                    このプランで始める
+                  </Link>
+                </div>
+              </AnimateIn>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ── CTA ──────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-[var(--navy)] py-20 text-white lg:py-28">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(209,175,97,0.18),transparent_25%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_20%)]" />
-        <div className="relative mx-auto max-w-5xl px-5 text-center lg:px-8">
+        <AnimateIn className="relative mx-auto max-w-5xl px-5 text-center lg:px-8">
           <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">Start Your Preparation</p>
           <h2 className="mt-5 font-serif text-4xl leading-tight md:text-6xl">
             企業に刺さる面接準備を、
@@ -469,12 +510,12 @@ export default function Home() {
             今日から始める。
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-sm leading-8 text-white/70 md:text-base">
-            最初の2社は無料。写真と余白で信頼感をつくるだけでなく、実際の面接成果につながる導線まで整えています。
+            最初の2社は無料。志望企業ごとに通じる面接設計を、AIと一緒に構築してください。
           </p>
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
             <Link
               href="/input"
-              className="rounded-full bg-[var(--gold)] px-8 py-4 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+              className="shimmer-btn rounded-full bg-[var(--gold)] px-8 py-4 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
             >
               無料で始める
             </Link>
@@ -485,16 +526,52 @@ export default function Home() {
               選考一覧を確認
             </Link>
           </div>
-        </div>
+        </AnimateIn>
       </section>
 
+      {/* ── Footer ───────────────────────────────────────── */}
       <footer className="border-t border-[var(--line)] bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-8 text-sm text-[var(--muted)] md:flex-row md:items-center md:justify-between lg:px-8">
-          <div>
-            <p className="font-serif text-2xl text-[var(--navy)]">就活Boost</p>
-            <p className="mt-1 text-xs uppercase tracking-[0.35em]">AI Interview Platform</p>
+        <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
+          <div className="grid gap-10 md:grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr]">
+            <div>
+              <p className="font-serif text-2xl text-[var(--navy)]">就活Boost</p>
+              <p className="mt-1 text-xs uppercase tracking-[0.35em] text-[var(--muted)]">AI Interview Platform</p>
+              <p className="mt-5 max-w-xs text-sm leading-7 text-[var(--ink-soft)]">
+                就活生の経験を企業別の説得力に変換する、AIを活用した面接設計ツール。
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Menu</p>
+              <div className="mt-5 space-y-3">
+                {footerNav.map((item) => (
+                  <a key={item.href} href={item.href} className="block text-sm text-[var(--ink-soft)] transition hover:text-[var(--navy)]">
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Service</p>
+              <div className="mt-5 space-y-3">
+                {footerService.map((item) => (
+                  <Link key={item.href} href={item.href} className="block text-sm text-[var(--ink-soft)] transition hover:text-[var(--navy)]">
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Plan</p>
+              <div className="mt-5 space-y-3 text-sm text-[var(--ink-soft)]">
+                <p>Starter（無料）</p>
+                <p>Growth（¥980/月）</p>
+                <p>Executive（¥1,980/月）</p>
+              </div>
+            </div>
           </div>
-          <p>© 2026 就活Boost. Designed for focused interview preparation.</p>
+          <div className="mt-12 border-t border-[var(--line)] pt-6 text-center text-xs text-[var(--muted)]">
+            © 2026 就活Boost. Designed for focused interview preparation.
+          </div>
         </div>
       </footer>
     </main>

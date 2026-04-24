@@ -46,3 +46,62 @@ button {
 ::selection {
   background: rgba(209, 175, 97, 0.28);
 }
+
+/* ── Hero entrance animations ───────────────────────────── */
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Hero preview card float ─────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  45%       { transform: translateY(-10px); }
+  65%       { transform: translateY(-6px); }
+}
+
+/* ── Scroll indicator ────────────────────────────────────── */
+@keyframes scrollDown {
+  0%   { transform: translateY(-100%); opacity: 0.8; }
+  60%  { opacity: 0.8; }
+  100% { transform: translateY(280%); opacity: 0; }
+}
+
+/* ── Shimmer on primary CTA ──────────────────────────────── */
+@keyframes shimmer {
+  from { transform: translateX(-120%) skewX(-16deg); }
+  to   { transform: translateX(220%) skewX(-16deg); }
+}
+
+.hero-1 { animation: heroFadeUp 0.82s ease 0.05s both; }
+.hero-2 { animation: heroFadeUp 0.92s ease 0.22s both; }
+.hero-3 { animation: heroFadeUp 0.82s ease 0.46s both; }
+.hero-4 { animation: heroFadeUp 0.82s ease 0.68s both; }
+.hero-5 { animation: heroFadeUp 0.82s ease 0.88s both; }
+.hero-card { animation: heroFadeUp 0.9s ease 0.32s both; }
+
+.animate-float {
+  animation: float 5.8s ease-in-out 1.2s infinite;
+}
+
+.animate-scroll-down {
+  animation: scrollDown 1.6s ease-in-out infinite;
+}
+
+.shimmer-btn {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+  animation: shimmer 3.2s ease 1.8s infinite;
+}
