@@ -3,36 +3,36 @@ import { AnimateIn } from "@/components/AnimateIn";
 import { MobileNav } from "@/components/MobileNav";
 
 const strengths = [
-  "志望企業ごとに面接回答を最適化",
-  "ES・ガクチカ・逆質問を一気通貫で設計",
-  "選考フェーズ別に答え方の温度を調整",
+  "志望理由・自己PR・逆質問を自動生成",
+  "企業ごとに内容を変えて複数社管理",
+  "1次〜最終面接まで対応",
 ];
 
 const serviceHighlights = [
   {
     id: "01",
-    title: "Strategic Interview Design",
-    heading: "企業理解を前提に、通る回答へ再構成する。",
+    title: "企業別に生成",
+    heading: "同じ内容を使い回さず、企業ごとに回答を作ります。",
     copy:
-      "就活Boostは、あなたの経験をただ整えるだけではありません。企業の価値観、募集職種、面接フェーズを踏まえて、評価される伝え方へ設計し直します。",
+      "企業名・職種・面接フェーズを指定すると、その企業に合わせた志望理由・自己PRを生成します。企業研究メモを追加するほど内容が具体的になります。",
     image:
       "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: "02",
-    title: "Personal Story Architecture",
-    heading: "自己分析の素材を、面接で使える言葉に変える。",
+    title: "8種類を一括生成",
+    heading: "自己紹介から逆質問まで、まとめて出力します。",
     copy:
-      "学生時代の経験、強み、弱み、就活の軸。断片的な情報を、面接官が理解しやすいストーリーラインに整理します。",
+      "自己紹介・志望理由・就活の軸・強み・弱み・キャリアプラン・締めの一言・逆質問の8種類を一度に生成。面接前に必要なものが揃います。",
     image:
       "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: "03",
-    title: "Operational Follow Through",
-    heading: "複数社の選考進行まで、ひとつの画面で管理する。",
+    title: "複数社を一括管理",
+    heading: "生成した回答は企業ごとに保存・更新できます。",
     copy:
-      "面接対策は作って終わりではありません。企業ごとの生成履歴、面接メモ、次回に向けた改善ポイントまで蓄積し、動ける状態を維持します。",
+      "企業を追加するたびに回答が蓄積されます。面接後に内容を直接編集したり、企業研究を追記して再生成することもできます。",
     image:
       "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
   },
@@ -47,28 +47,28 @@ const metrics = [
 
 const featureCards = [
   {
-    label: "Interview Fit",
-    title: "企業別に温度感まで合わせる面接生成",
+    label: "企業別生成",
+    title: "企業ごとに内容が変わります",
     description:
-      "同じ自己PRを使い回さず、企業の事業内容やカルチャーに合わせてニュアンスを調整します。",
+      "同じプロフィールでも、企業名・職種・フェーズを変えると回答の内容が変わります。使い回しではありません。",
   },
   {
-    label: "Question Design",
-    title: "逆質問まで一貫した設計",
+    label: "逆質問",
+    title: "逆質問も自動で生成します",
     description:
-      "面接終盤の逆質問も、企業理解とあなたの志向をつなげた内容に整えます。",
+      "「何か質問はありますか」への回答も、企業情報をもとに3件生成します。自分の意見と質問をセットで出力します。",
   },
   {
-    label: "Selection Flow",
-    title: "1次から最終までフェーズ別に更新",
+    label: "フェーズ対応",
+    title: "1次・2次・最終面接に対応",
     description:
-      "初回面接向けのわかりやすさと、最終面接向けの解像度の高さを切り分けて生成します。",
+      "選考フェーズを指定すると、その段階に合わせた内容で生成します。面接が進んだら再生成できます。",
   },
   {
-    label: "Knowledge Layer",
-    title: "企業研究メモを蓄積して精度を上げる",
+    label: "企業研究メモ",
+    title: "メモを追加すると内容が具体的になります",
     description:
-      "説明会メモやIR情報、採用ページの印象を追加すると、次回以降の回答品質がさらに上がります。",
+      "採用ページの内容やニュースを貼り付けると、志望理由や逆質問がより具体的な内容になります。",
   },
 ];
 
@@ -157,9 +157,9 @@ export default function Home() {
 
       {/* ── Announcement bar ─────────────────────────────── */}
       <div className="border-b border-white/8 bg-[var(--navy)] py-2.5 text-center text-xs tracking-[0.14em] text-white/55">
-        AI就活面接対策 — 初回2社まで
-        <span className="mx-1 font-semibold text-[var(--gold-soft)]">完全無料</span>
-        でご利用いただけます
+        登録不要 — 最初の2社分は
+        <span className="mx-1 font-semibold text-[var(--gold-soft)]">無料</span>
+        でお試しいただけます
       </div>
 
       {/* ── Header ───────────────────────────────────────── */}
@@ -201,18 +201,17 @@ export default function Home() {
         <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-28">
           <div className="max-w-3xl">
             <p className="hero-1 mb-5 text-xs uppercase tracking-[0.45em] text-[var(--gold-soft)]">
-              AI Interview Platform For Serious Candidates
+              AI面接対策ツール — 就活Boost
             </p>
             <h1 className="hero-2 max-w-4xl font-serif text-5xl leading-[1.05] tracking-[0.02em] text-white md:text-7xl">
-              面接対策を、
+              志望企業ごとの
               <br />
-              企業に通じる
+              面接回答を、
               <br />
-              企画へ変える。
+              AIが作ります。
             </h1>
-            <p className="hero-3 mt-8 max-w-2xl text-base leading-8 text-white/72 md:text-lg">
-              就活Boostは、就活生の経験を企業別の説得力に変換する面接設計ツールです。
-              テンプレートを並べるのではなく、志望企業ごとに通り方を再設計します。
+            <p className="hero-3 mt-8 max-w-xl text-base leading-8 text-white/72">
+              プロフィールと企業情報を入力するだけで、志望理由・自己PR・逆質問など8種類の回答を自動生成します。
             </p>
             <div className="hero-4 mt-10 flex flex-col gap-4 sm:flex-row">
               <Link
@@ -316,13 +315,12 @@ export default function Home() {
           <AnimateIn className="max-w-xl">
             <p className="text-xs uppercase tracking-[0.38em] text-[var(--accent)]">Concept</p>
             <h2 className="mt-5 font-serif text-4xl leading-tight text-[var(--navy)] md:text-5xl">
-              企業の意図を読んで、
+              入力した情報から、
               <br />
-              通じる言葉を設計する。
+              企業別の回答を生成します。
             </h2>
             <p className="mt-6 text-base leading-8 text-[var(--ink-soft)]">
-              AIの力だけに頼らない設計です。企業研究のメモ、選考フェーズ、過去の面接の手応えを積み重ねることで、
-              生成される内容の解像度は回を追うごとに高まっていきます。
+              ガクチカや強みを一度登録すれば、あとは企業情報を追加するだけです。企業研究メモを足すほど、生成される内容が具体的になります。
             </p>
           </AnimateIn>
           <div className="grid gap-5 md:grid-cols-2">
@@ -346,13 +344,13 @@ export default function Home() {
             <div className="max-w-2xl">
               <p className="text-xs uppercase tracking-[0.38em] text-[var(--accent)]">Service Design</p>
               <h2 className="mt-5 font-serif text-4xl leading-tight text-[var(--navy)] md:text-5xl">
-                企業研究から面接準備まで、
+                このツールで
                 <br />
-                一つの流れで完結する。
+                できること。
               </h2>
             </div>
-            <p className="max-w-xl text-sm leading-8 text-[var(--ink-soft)]">
-              機能を揃えるだけでなく、企業研究・面接準備・改善サイクルを一つのプラットフォームで完結させる設計にしました。
+            <p className="max-w-sm text-sm leading-8 text-[var(--ink-soft)]">
+              企業の追加・回答の生成・内容の編集・再生成まで、一つのアプリで完結します。
             </p>
           </AnimateIn>
 
@@ -398,12 +396,12 @@ export default function Home() {
             <AnimateIn>
               <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">How It Works</p>
               <h2 className="mt-5 font-serif text-4xl leading-tight md:text-5xl">
-                面接準備を、
+                使い方は
                 <br />
-                手戻りの少ない運用にする。
+                4ステップです。
               </h2>
               <p className="mt-6 max-w-lg text-sm leading-8 text-white/68">
-                準備、生成、改善までの流れを一つのシステムに閉じ込めることで、就活中の思考コストを減らします。
+                初回のプロフィール登録が終われば、2回目以降は企業情報を入れるだけで面接対策が完成します。
               </p>
             </AnimateIn>
             <div className="grid gap-5 md:grid-cols-2">
@@ -506,12 +504,12 @@ export default function Home() {
         <AnimateIn className="relative mx-auto max-w-5xl px-5 text-center lg:px-8">
           <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">Start Your Preparation</p>
           <h2 className="mt-5 font-serif text-4xl leading-tight md:text-6xl">
-            企業に刺さる面接準備を、
+            まず2社分、
             <br />
-            今日から始める。
+            無料で試してみてください。
           </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-sm leading-8 text-white/70 md:text-base">
-            最初の2社は無料。志望企業ごとに通じる面接設計を、AIと一緒に構築してください。
+          <p className="mx-auto mt-6 max-w-lg text-sm leading-8 text-white/70">
+            登録不要です。企業名と自分のプロフィールを入れると、すぐに回答が生成されます。
           </p>
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
             <Link
