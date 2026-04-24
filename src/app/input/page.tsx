@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect, Suspense } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { saveCompany, getCompany, type CompanyRecord } from "@/lib/companies";
+import { getCompany, saveCompany, type CompanyRecord } from "@/lib/companies";
 
 interface FormData {
   name: string;
@@ -24,70 +24,92 @@ interface FormData {
   motivationMemo: string;
 }
 
-type ProfileData = Pick<FormData, "name" | "university" | "faculty" | "background" | "gakuchika" | "strengths" | "weaknesses" | "jobAxis">;
+type ProfileData = Pick<
+  FormData,
+  "name" | "university" | "faculty" | "background" | "gakuchika" | "strengths" | "weaknesses" | "jobAxis"
+>;
+
+type ExtendedCompanyRecord = CompanyRecord & {
+  strengthsOverride?: string;
+  weaknessesOverride?: string;
+  motivationMemo?: string;
+};
 
 const PROFILE_KEY = "naiteiNaviProfile";
 
 const INITIAL_FORM: FormData = {
-  name: "", university: "", faculty: "", background: "",
-  gakuchika: "", strengths: "", weaknesses: "", jobAxis: "",
-  companyName: "", jobType: "", interviewPhase: "1次面接",
-  companyPhilosophy: "", desiredTalent: "", articles: "",
-  strengthsOverride: "", weaknessesOverride: "", motivationMemo: "",
+  name: "",
+  university: "",
+  faculty: "",
+  background: "",
+  gakuchika: "",
+  strengths: "",
+  weaknesses: "",
+  jobAxis: "",
+  companyName: "",
+  jobType: "",
+  interviewPhase: "1次面接",
+  companyPhilosophy: "",
+  desiredTalent: "",
+  articles: "",
+  strengthsOverride: "",
+  weaknessesOverride: "",
+  motivationMemo: "",
 };
+
+function getStoredProfile(): ProfileData | null {
+  if (typeof window === "undefined") return null;
+  const saved = localStorage.getItem(PROFILE_KEY);
+  return saved ? (JSON.parse(saved) as ProfileData) : null;
+}
+
+function getPrefilledForm(editId: string | null): FormData {
+  const profile = getStoredProfile();
+  const base = { ...INITIAL_FORM, ...(profile ?? {}) };
+
+  if (!editId) return base;
+
+  const company = getCompany(editId) as ExtendedCompanyRecord | null;
+  if (!company) return base;
+
+  return {
+    ...base,
+    companyName: company.companyName,
+    jobType: company.jobType,
+    interviewPhase: company.interviewPhase,
+    companyPhilosophy: company.companyPhilosophy,
+    desiredTalent: company.desiredTalent,
+    articles: company.articles,
+    strengthsOverride: company.strengthsOverride ?? "",
+    weaknessesOverride: company.weaknessesOverride ?? "",
+    motivationMemo: company.motivationMemo ?? "",
+  };
+}
 
 function InputForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
+  const hasStoredProfile = !!getStoredProfile();
+  const initialStep = editId || (searchParams.get("step") === "2" && hasStoredProfile) ? 2 : 1;
 
-  const [step, setStep] = useState(searchParams.get("step") === "2" ? 2 : 1);
+  const [step, setStep] = useState(initialStep);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
-  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [formData, setFormData] = useState<FormData>(() => getPrefilledForm(editId));
+  const [profileLoaded, setProfileLoaded] = useState(hasStoredProfile);
   const [justSaved, setJustSaved] = useState(false);
-  const [showOverrides, setShowOverrides] = useState(false);
-  const [showResearch, setShowResearch] = useState(false);
+  const [showResearch, setShowResearch] = useState(
+    !!editId || !!formData.companyPhilosophy || !!formData.desiredTalent || !!formData.articles
+  );
+  const [showOverrides, setShowOverrides] = useState(
+    !!formData.strengthsOverride || !!formData.weaknessesOverride || !!formData.motivationMemo
+  );
   const [researching, setResearching] = useState(false);
 
-  useEffect(() => {
-    if (editId) {
-      const company = getCompany(editId);
-      if (company) {
-        setFormData((prev) => ({
-          ...prev,
-          companyName: company.companyName,
-          jobType: company.jobType,
-          interviewPhase: company.interviewPhase,
-          companyPhilosophy: company.companyPhilosophy,
-          desiredTalent: company.desiredTalent,
-          articles: company.articles,
-          strengthsOverride: (company as CompanyRecord & { strengthsOverride?: string }).strengthsOverride ?? "",
-          weaknessesOverride: (company as CompanyRecord & { weaknessesOverride?: string }).weaknessesOverride ?? "",
-          jobAxisOverride: (company as CompanyRecord & { jobAxisOverride?: string }).jobAxisOverride ?? "",
-        }));
-        setStep(2);
-      }
-    }
-
-    const saved = localStorage.getItem(PROFILE_KEY);
-    if (saved) {
-      const profile: ProfileData = JSON.parse(saved);
-      setFormData((prev) => ({ ...prev, ...profile }));
-      setProfileLoaded(true);
-    }
-  }, [editId]);
-
-  useEffect(() => {
-    if (searchParams.get("step") === "2" && profileLoaded) {
-      setStep(2);
-    }
-  }, [profileLoaded, searchParams]);
-
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = e.target;
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = event.target;
       setFormData((prev) => ({ ...prev, [name]: value }));
     },
     []
@@ -95,9 +117,14 @@ function InputForm() {
 
   const saveProfile = (data: FormData) => {
     const profile: ProfileData = {
-      name: data.name, university: data.university, faculty: data.faculty,
-      background: data.background, gakuchika: data.gakuchika,
-      strengths: data.strengths, weaknesses: data.weaknesses, jobAxis: data.jobAxis,
+      name: data.name,
+      university: data.university,
+      faculty: data.faculty,
+      background: data.background,
+      gakuchika: data.gakuchika,
+      strengths: data.strengths,
+      weaknesses: data.weaknesses,
+      jobAxis: data.jobAxis,
     };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     setProfileLoaded(true);
@@ -109,13 +136,14 @@ function InputForm() {
     if (!formData.companyName) return;
     setResearching(true);
     setShowResearch(true);
+
     try {
-      const res = await fetch("/api/research", {
+      const response = await fetch("/api/research", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ companyName: formData.companyName }),
       });
-      const data = await res.json();
+      const data = await response.json();
       setFormData((prev) => ({
         ...prev,
         companyPhilosophy: data.companyPhilosophy ?? prev.companyPhilosophy,
@@ -123,7 +151,7 @@ function InputForm() {
         articles: data.articles ?? prev.articles,
       }));
     } catch {
-      // fail silently
+      // Ignore research fetch failures and leave manual entry available.
     } finally {
       setResearching(false);
     }
@@ -131,45 +159,57 @@ function InputForm() {
 
   const clearProfile = () => {
     localStorage.removeItem(PROFILE_KEY);
-    setFormData(INITIAL_FORM);
+    setFormData((prev) => ({
+      ...prev,
+      name: "",
+      university: "",
+      faculty: "",
+      background: "",
+      gakuchika: "",
+      strengths: "",
+      weaknesses: "",
+      jobAxis: "",
+    }));
     setProfileLoaded(false);
   };
 
   const handleNext = () => {
     const { name, university, faculty, gakuchika, strengths, weaknesses, jobAxis } = formData;
     if (!name || !university || !faculty || !gakuchika || !strengths || !weaknesses || !jobAxis) {
-      setError("すべての必須項目を入力してください");
+      setError("必須項目を入力してください。");
       return;
     }
-    setError("");
+
     saveProfile(formData);
+    setError("");
     setStep(2);
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSubmit = async () => {
-    const { companyName, jobType } = formData;
-    if (!companyName || !jobType) {
-      setError("企業名と職種を入力してください");
+    if (!formData.companyName || !formData.jobType) {
+      setError("企業名と希望職種を入力してください。");
       return;
     }
+
     setError("");
     setLoading(true);
 
     try {
-      const res = await fetch("/api/generate", {
+      const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      if (!res.ok) throw new Error("Generation failed");
+      if (!response.ok) throw new Error("Generation failed");
 
-      const generatedContent = await res.json();
+      const generatedContent = await response.json();
       const now = new Date().toISOString();
       const companyId = editId ?? Date.now().toString();
+      const existing = editId ? (getCompany(editId) as ExtendedCompanyRecord | null) : null;
 
-      const record: CompanyRecord & { strengthsOverride?: string; weaknessesOverride?: string; motivationMemo?: string } = {
+      const record: ExtendedCompanyRecord = {
         id: companyId,
         companyName: formData.companyName,
         jobType: formData.jobType,
@@ -181,7 +221,7 @@ function InputForm() {
         weaknessesOverride: formData.weaknessesOverride,
         motivationMemo: formData.motivationMemo,
         generatedContent,
-        createdAt: now,
+        createdAt: existing?.createdAt ?? now,
         updatedAt: now,
       };
 
@@ -193,381 +233,441 @@ function InputForm() {
     }
   };
 
+  const infoPill = "rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm text-white/78";
+
   return (
-    <div className="min-h-screen flex">
-      {/* ── Left panel (desktop only) ── */}
-      <aside className="hidden lg:flex flex-col w-80 xl:w-96 min-h-screen bg-[#1B2D6B] sticky top-0 h-screen overflow-y-auto shrink-0">
-        <div className="flex flex-col flex-1 px-10 py-12">
-          <button
-            onClick={() => router.push("/")}
-            className="text-white font-bold text-2xl tracking-wide mb-2 text-left"
-          >
-            就活Boost
-          </button>
-          <p className="text-white/50 text-xs mb-12">AI面接対策サービス</p>
+    <main className="min-h-screen bg-[var(--paper)]">
+      <div className="grid min-h-screen lg:grid-cols-[0.92fr_1.08fr]">
+        <aside className="relative hidden overflow-hidden bg-[var(--navy)] text-white lg:block">
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-22"
+            style={{
+              backgroundImage:
+                "linear-gradient(180deg, rgba(7,18,35,0.9), rgba(7,18,35,0.74)), url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80')",
+            }}
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(209,175,97,0.2),transparent_24%)]" />
+          <div className="relative flex h-full flex-col px-10 py-12 xl:px-14">
+            <button onClick={() => router.push("/")} className="text-left">
+              <p className="font-serif text-3xl tracking-[0.12em]">就活Boost</p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.45em] text-white/45">Interview Builder</p>
+            </button>
 
-          <div className="space-y-6 mb-12">
-            {[
-              { icon: "✦", title: "企業別に最適化", body: "企業理念・求める人材・最新ニュースを反映した回答を生成" },
-              { icon: "✦", title: "全項目を網羅", body: "自己紹介から逆質問まで、面接で聞かれる内容をすべてカバー" },
-              { icon: "✦", title: "何度でも再生成", body: "フィードバックをもとに改善。選考フェーズごとに調整可能" },
-            ].map((item) => (
-              <div key={item.title} className="flex gap-4">
-                <span className="text-[#4B7BF5] text-sm mt-0.5 shrink-0">{item.icon}</span>
-                <div>
-                  <p className="text-white text-sm font-semibold mb-1">{item.title}</p>
-                  <p className="text-white/50 text-xs leading-relaxed">{item.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-auto">
-            <blockquote className="border-l-2 border-white/20 pl-5">
-              <p className="text-white/60 text-sm leading-relaxed italic mb-3">
-                「自分では気づいていなかった強みが言語化されて、自信を持って面接に臨めました」
+            <div className="mt-14">
+              <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">Structured Preparation</p>
+              <h1 className="mt-5 font-serif text-5xl leading-tight">
+                企業ごとの面接準備を、
+                <br />
+                気持ちではなく設計で進める。
+              </h1>
+              <p className="mt-6 max-w-xl text-sm leading-8 text-white/72">
+                自己分析、企業研究、逆質問の準備を一つの流れで入力し、企業に刺さる回答へ再構成します。
               </p>
-              <p className="text-white/40 text-xs">— 就活Boost利用者</p>
+            </div>
+
+            <div className="mt-10 grid gap-3">
+              {[
+                "プロフィールは自動保存され、次回以降も再利用",
+                "企業研究を足すほど志望理由と逆質問の精度が向上",
+                "1次から最終までフェーズ別に出し分け可能",
+              ].map((item) => (
+                <div key={item} className={infoPill}>
+                  {item}
+                </div>
+              ))}
+            </div>
+
+            <blockquote className="mt-auto max-w-md border-l border-white/20 pl-5">
+              <p className="text-sm leading-8 text-white/72">
+                「企業ごとに話すべき強みが整理されて、面接直前の迷いがかなり減りました。」
+              </p>
+              <p className="mt-3 text-xs uppercase tracking-[0.28em] text-white/38">User Voice</p>
             </blockquote>
           </div>
-        </div>
-      </aside>
+        </aside>
 
-      {/* ── Right: form area ── */}
-      <div className="flex-1 min-w-0 bg-[#F5F6F8]">
-        {/* Top bar */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button onClick={() => router.push("/")} className="text-[#1B2D6B] font-bold text-lg lg:hidden">就活Boost</button>
-              <button onClick={() => router.push("/companies")} className="text-gray-400 text-sm hover:text-gray-600 transition-colors">
-                ← 選考中企業
-              </button>
-            </div>
-            <div className="flex items-center gap-3">
+        <div className="min-w-0">
+          <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[rgba(247,242,234,0.92)] backdrop-blur-xl">
+            <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-4 lg:px-8">
+              <div className="flex items-center gap-4">
+                <button onClick={() => router.push("/companies")} className="text-sm font-semibold text-[var(--ink-soft)] transition hover:text-[var(--navy)]">
+                  ← 選考一覧
+                </button>
+                <button onClick={() => router.push("/")} className="font-serif text-2xl text-[var(--navy)] lg:hidden">
+                  就活Boost
+                </button>
+              </div>
               {profileLoaded && (
-                <>
-                  <span className="text-emerald-600 text-xs font-semibold hidden sm:block">✓ プロフィール保存済み</span>
-                  <button onClick={clearProfile} className="text-gray-400 text-xs hover:text-gray-600 transition-colors underline">リセット</button>
-                </>
+                <div className="flex items-center gap-3">
+                  <span className="hidden rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 sm:inline-flex">
+                    プロフィール保存済み
+                  </span>
+                  <button onClick={clearProfile} className="text-xs font-semibold text-[var(--muted)] underline-offset-2 hover:underline">
+                    リセット
+                  </button>
+                </div>
               )}
             </div>
-          </div>
+          </header>
 
-          {/* Step progress bar */}
-          <div className="max-w-2xl mx-auto px-6 pb-0">
-            <div className="flex">
+          {justSaved && (
+            <div className="fixed right-5 top-5 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+              プロフィールを保存しました
+            </div>
+          )}
+
+          <div className="mx-auto max-w-3xl px-5 py-8 lg:px-8 lg:py-10">
+            <div className="mb-8 flex gap-3">
               {[
                 { n: 1, label: "自己情報" },
                 { n: 2, label: "企業情報" },
-              ].map(({ n, label }) => (
-                <div key={n} className="flex-1">
-                  <div className={`h-0.5 transition-colors ${step >= n ? "bg-[#1B2D6B]" : "bg-gray-200"}`} />
-                  <div className="flex items-center gap-2 py-2.5 px-1">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black transition-colors shrink-0 ${step >= n ? "bg-[#1B2D6B] text-white" : "bg-gray-200 text-gray-400"}`}>
-                      {step > n ? "✓" : n}
+              ].map((item) => (
+                <div key={item.n} className="flex-1">
+                  <div className={`h-1 rounded-full ${step >= item.n ? "bg-[var(--gold)]" : "bg-[var(--line)]"}`} />
+                  <div className="mt-3 flex items-center gap-3">
+                    <div
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                        step >= item.n ? "bg-[var(--navy)] text-white" : "bg-white text-[var(--muted)] border border-[var(--line)]"
+                      }`}
+                    >
+                      {step > item.n ? "✓" : item.n}
                     </div>
-                    <span className={`text-xs font-semibold transition-colors ${step >= n ? "text-[#1B2D6B]" : "text-gray-400"}`}>{label}</span>
+                    <span className={`text-sm font-semibold ${step >= item.n ? "text-[var(--navy)]" : "text-[var(--muted)]"}`}>
+                      {item.label}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
 
-        {justSaved && (
-          <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white text-sm px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2">
-            ✓ プロフィールを保存しました
-          </div>
-        )}
-
-        <div className="max-w-2xl mx-auto px-6 py-8">
-          {step === 1 ? (
-            <div className="space-y-6">
-              <div className="flex items-start justify-between">
+            {step === 1 ? (
+              <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-1">あなたについて教えてください</h2>
-                  <p className="text-sm text-gray-500">複数企業の対策に使い回せるよう自動保存されます</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-[var(--accent)]">Step 01</p>
+                  <h2 className="mt-4 font-serif text-4xl text-[var(--navy)]">あなた自身の土台を整理する</h2>
+                  <p className="mt-4 text-sm leading-8 text-[var(--ink-soft)]">
+                    ここで入力した内容が、今後すべての企業の面接対策に使われます。抽象論より、具体的な経験や癖を書いた方が強いです。
+                  </p>
                 </div>
-                {profileLoaded && (
-                  <span className="shrink-0 ml-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
-                    ✓ 前回の情報を読み込み済み
-                  </span>
-                )}
-              </div>
 
-              {/* 基本情報 */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em]">基本情報</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="名前" name="name" value={formData.name} onChange={handleChange} placeholder="山田 太郎" />
-                  <Field label="大学名" name="university" value={formData.university} onChange={handleChange} placeholder="○○大学" />
-                </div>
-                <Field label="学部・学科" name="faculty" value={formData.faculty} onChange={handleChange} placeholder="経済学部 経済学科" />
-              </div>
-
-              {/* バックグラウンド */}
-              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm font-bold text-[#1B2D6B]">自己バックグラウンド</p>
-                  <span className="text-xs text-blue-400 font-medium">任意 — 多いほど精度UP</span>
-                </div>
-                <p className="text-xs text-blue-600/70 mb-3 leading-relaxed">
-                  出身・家族・趣味・アルバイト・インターン・印象的な出来事・価値観の源泉など
-                </p>
-                <textarea
-                  name="background"
-                  value={formData.background}
-                  onChange={handleChange}
-                  rows={4}
-                  placeholder="例）北海道出身で農家の長男。食の大切さを身近に感じて育った。居酒屋でフードロスに課題を感じ独自に調べていた。趣味は登山。"
-                  className="w-full border border-blue-200 rounded-xl px-4 py-3 text-gray-900 placeholder-blue-300 focus:outline-none focus:border-[#1B2D6B] focus:ring-2 focus:ring-[#1B2D6B]/10 transition-colors resize-none bg-white text-sm"
-                />
-              </div>
-
-              {/* ガクチカ */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-5">ガクチカ</p>
-                <TextArea
-                  label="学生時代に力を入れたこと"
-                  name="gakuchika"
-                  value={formData.gakuchika}
-                  onChange={handleChange}
-                  placeholder="具体的なエピソード、取り組み内容、成果などを詳しく書いてください"
-                  rows={5}
-                />
-              </div>
-
-              {/* 強み・弱み・就活の軸 */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em]">強み・弱み・就活の軸</p>
-                  <span className="text-xs text-gray-400">企業別に調整可能</span>
-                </div>
-                <TextArea label="強み" name="strengths" value={formData.strengths} onChange={handleChange} placeholder="具体的な行動・癖・得意なことを書いてください" rows={3} />
-                <TextArea label="弱み" name="weaknesses" value={formData.weaknesses} onChange={handleChange} placeholder="正直に書くほどオリジナリティのある回答になります" rows={3} />
-                <TextArea label="就活の軸" name="jobAxis" value={formData.jobAxis} onChange={handleChange} placeholder="就職活動において大切にしていること" rows={3} />
-              </div>
-
-              {error && (
-                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-                  <span>⚠</span> {error}
-                </div>
-              )}
-
-              <button
-                onClick={handleNext}
-                className="w-full bg-[#1B2D6B] text-white py-4 rounded-2xl font-bold text-sm hover:bg-[#0F1B50] transition-colors"
-              >
-                次へ — 企業情報を入力する
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <button
-                    onClick={() => { setStep(1); setError(""); }}
-                    className="text-gray-400 text-sm mb-2 flex items-center gap-1 hover:text-gray-600 transition-colors"
-                  >
-                    ← 自己情報に戻る
-                  </button>
-                  <h2 className="text-xl font-bold text-gray-900">応募企業の情報</h2>
-                  <p className="text-sm text-gray-500 mt-0.5">企業に合わせた面接対策を生成します</p>
-                </div>
-              </div>
-
-              {/* 必須情報 */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em]">必須情報</p>
-                <Field label="企業名" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="○○株式会社" />
-                <Field label="希望職種" name="jobType" value={formData.jobType} onChange={handleChange} placeholder="営業職・エンジニア・マーケティング など" />
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-3">面接フェーズ</label>
-                  <div className="flex gap-2">
-                    {["1次面接", "2次面接", "最終面接"].map((phase) => (
-                      <label
-                        key={phase}
-                        className={`flex-1 border-2 rounded-xl py-3 px-2 text-center cursor-pointer transition-all text-sm font-semibold ${
-                          formData.interviewPhase === phase
-                            ? "border-[#1B2D6B] bg-[#1B2D6B] text-white"
-                            : "border-gray-200 text-gray-500 hover:border-[#1B2D6B]/40 bg-white"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="interviewPhase"
-                          value={phase}
-                          checked={formData.interviewPhase === phase}
-                          onChange={handleChange}
-                          className="sr-only"
-                        />
-                        {phase}
-                      </label>
-                    ))}
+                <section className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Basic Profile</p>
+                  <div className="mt-6 grid gap-5 md:grid-cols-2">
+                    <Field label="名前" name="name" value={formData.name} onChange={handleChange} placeholder="山田 太郎" />
+                    <Field label="大学名" name="university" value={formData.university} onChange={handleChange} placeholder="○○大学" />
                   </div>
-                </div>
-              </div>
-
-              {/* 企業研究 accordion */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-4">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">企業研究情報</p>
-                    <p className="text-xs text-gray-400 mt-0.5">任意 — 志望理由・逆質問の精度が上がります</p>
+                  <div className="mt-5">
+                    <Field label="学部・学科" name="faculty" value={formData.faculty} onChange={handleChange} placeholder="経済学部 経済学科" />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleResearch}
-                      disabled={!formData.companyName || researching}
-                      className="flex items-center gap-1.5 bg-[#1B2D6B] text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-[#0F1B50] transition-colors disabled:opacity-40"
-                    >
-                      {researching ? (
-                        <><span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />調査中...</>
-                      ) : "✦ AIで調べる"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowResearch((v) => !v)}
-                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
-                    >
-                      <svg className={`w-4 h-4 transition-transform ${showResearch ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+                </section>
 
-                {showResearch && (
-                  <div className="border-t border-gray-100 px-6 py-5 space-y-5 bg-gray-50/50">
-                    {researching && (
-                      <div className="flex items-center gap-2 text-[#1B2D6B] text-xs font-medium">
-                        <span className="w-3 h-3 border-2 border-[#1B2D6B] border-t-transparent rounded-full animate-spin" />
-                        {formData.companyName}を調査中...
-                      </div>
-                    )}
-                    <TextArea label="企業理念・ビジョン" name="companyPhilosophy" value={formData.companyPhilosophy} onChange={handleChange} placeholder="HPや採用ページの理念・ビジョン・バリューを貼り付け" rows={3} />
-                    <TextArea label="求める人材像" name="desiredTalent" value={formData.desiredTalent} onChange={handleChange} placeholder="採用ページの「求める人材」「こんな人と働きたい」などを貼り付け" rows={3} />
-                    <TextArea label="気になった記事・ニュース・IR情報" name="articles" value={formData.articles} onChange={handleChange} placeholder="最近の取り組み・新事業・社長インタビューなど" rows={3} />
+                <section className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Background</p>
+                  <div className="mt-5">
+                    <TextArea
+                      label="自己バックグラウンド"
+                      name="background"
+                      value={formData.background}
+                      onChange={handleChange}
+                      placeholder="育った環境、価値観の原点、部活、アルバイト、趣味、印象に残る出来事など"
+                      rows={5}
+                    />
                   </div>
-                )}
-              </div>
+                </section>
 
-              {/* カスタマイズ accordion */}
-              <div className="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
+                <section className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Core Narrative</p>
+                  <div className="mt-5 space-y-5">
+                    <TextArea
+                      label="学生時代に力を入れたこと"
+                      name="gakuchika"
+                      value={formData.gakuchika}
+                      onChange={handleChange}
+                      placeholder="何に取り組み、何を考え、どんな工夫をして、どう成果につなげたか"
+                      rows={5}
+                    />
+                    <TextArea
+                      label="強み"
+                      name="strengths"
+                      value={formData.strengths}
+                      onChange={handleChange}
+                      placeholder="行動の傾向、得意な進め方、周囲から言われることなど"
+                      rows={4}
+                    />
+                    <TextArea
+                      label="弱み"
+                      name="weaknesses"
+                      value={formData.weaknesses}
+                      onChange={handleChange}
+                      placeholder="正直に書くほど、面接での答え方に深みが出ます"
+                      rows={4}
+                    />
+                    <TextArea
+                      label="就活の軸"
+                      name="jobAxis"
+                      value={formData.jobAxis}
+                      onChange={handleChange}
+                      placeholder="働く上で重視すること、やりたいこと、避けたいこと"
+                      rows={4}
+                    />
+                  </div>
+                </section>
+
+                {error && <ErrorBanner message={error} />}
+
                 <button
-                  type="button"
-                  onClick={() => setShowOverrides((v) => !v)}
-                  className="w-full flex items-center justify-between px-6 py-4 bg-amber-50 hover:bg-amber-100/70 transition-colors text-left"
+                  onClick={handleNext}
+                  className="w-full rounded-full bg-[var(--navy)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#162c49]"
                 >
-                  <div>
-                    <p className="text-sm font-semibold text-amber-900">この企業向けにカスタマイズ</p>
-                    <p className="text-xs text-amber-600 mt-0.5">強み・弱み・志望理由を企業別に調整</p>
-                  </div>
-                  <svg className={`w-4 h-4 text-amber-400 transition-transform shrink-0 ml-4 ${showOverrides ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
+                  企業情報の入力へ進む
                 </button>
-
-                {showOverrides && (
-                  <div className="px-6 py-5 space-y-5">
-                    <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2.5 border border-amber-100">
-                      空欄の場合はプロフィールの内容が使われます。この企業に特化した内容がある場合のみ入力してください。
-                    </p>
-                    <TextArea
-                      label="強み（この企業向け）"
-                      name="strengthsOverride"
-                      value={formData.strengthsOverride}
-                      onChange={handleChange}
-                      placeholder={formData.strengths ? `デフォルト: "${formData.strengths.slice(0, 40)}..."` : "この企業で特に強調したい強みを入力"}
-                      rows={3}
-                    />
-                    <TextArea
-                      label="弱み（この企業向け）"
-                      name="weaknessesOverride"
-                      value={formData.weaknessesOverride}
-                      onChange={handleChange}
-                      placeholder={formData.weaknesses ? `デフォルト: "${formData.weaknesses.slice(0, 40)}..."` : "この企業で使いたい弱みを入力"}
-                      rows={3}
-                    />
-                    <TextArea
-                      label="志望理由のメモ（この企業に伝えたいこと）"
-                      name="motivationMemo"
-                      value={formData.motivationMemo}
-                      onChange={handleChange}
-                      placeholder="この企業を選んだ理由・きっかけ・特に伝えたいエピソードなど。AIが志望理由に組み込みます"
-                      rows={3}
-                    />
-                  </div>
-                )}
               </div>
-
-              {error && (
-                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-                  <span>⚠</span> {error}
+            ) : (
+              <div className="space-y-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <button
+                      onClick={() => {
+                        setStep(1);
+                        setError("");
+                      }}
+                      className="text-sm font-semibold text-[var(--ink-soft)] transition hover:text-[var(--navy)]"
+                    >
+                      ← 自己情報へ戻る
+                    </button>
+                    <p className="mt-4 text-xs uppercase tracking-[0.35em] text-[var(--accent)]">Step 02</p>
+                    <h2 className="mt-4 font-serif text-4xl text-[var(--navy)]">企業別の面接設計をつくる</h2>
+                    <p className="mt-4 text-sm leading-8 text-[var(--ink-soft)]">
+                      企業情報を足すほど、志望理由と逆質問の精度が上がります。必要なら企業ごとの強みの見せ方も変えられます。
+                    </p>
+                  </div>
                 </div>
-              )}
 
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full bg-[#1B2D6B] text-white py-4 rounded-2xl font-bold text-sm hover:bg-[#0F1B50] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    AIが面接対策を生成中...
-                  </>
-                ) : "AIで面接対策を生成する"}
-              </button>
-            </div>
-          )}
+                <section className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Company Brief</p>
+                  <div className="mt-6 space-y-5">
+                    <Field label="企業名" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="○○株式会社" />
+                    <Field label="希望職種" name="jobType" value={formData.jobType} onChange={handleChange} placeholder="営業職、企画職、エンジニアなど" />
+                    <div>
+                      <label className="block text-sm font-semibold text-[var(--navy)]">面接フェーズ</label>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        {["1次面接", "2次面接", "最終面接"].map((phase) => (
+                          <label
+                            key={phase}
+                            className={`cursor-pointer rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+                              formData.interviewPhase === phase
+                                ? "bg-[var(--navy)] text-white"
+                                : "border border-[var(--line)] bg-[var(--paper)] text-[var(--ink-soft)] hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="interviewPhase"
+                              value={phase}
+                              checked={formData.interviewPhase === phase}
+                              onChange={handleChange}
+                              className="sr-only"
+                            />
+                            {phase}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+                  <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-5">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Research Layer</p>
+                      <h3 className="mt-3 font-serif text-3xl text-[var(--navy)]">企業研究情報</h3>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={handleResearch}
+                        disabled={!formData.companyName || researching}
+                        className="rounded-full bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d] disabled:opacity-50"
+                      >
+                        {researching ? "調査中..." : "AIで補助調査"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowResearch((prev) => !prev)}
+                        className="rounded-full border border-[var(--line)] px-5 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                      >
+                        {showResearch ? "閉じる" : "開く"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {showResearch && (
+                    <div className="border-t border-[var(--line)] bg-[var(--paper)] px-6 py-6">
+                      <div className="space-y-5">
+                        <TextArea
+                          label="企業理念・ビジョン"
+                          name="companyPhilosophy"
+                          value={formData.companyPhilosophy}
+                          onChange={handleChange}
+                          placeholder="採用ページや企業サイトの理念、価値観、ビジョン"
+                          rows={4}
+                        />
+                        <TextArea
+                          label="求める人材像"
+                          name="desiredTalent"
+                          value={formData.desiredTalent}
+                          onChange={handleChange}
+                          placeholder="採用ページで明示されている人物像や期待される行動"
+                          rows={4}
+                        />
+                        <TextArea
+                          label="ニュース・IR・気になった記事"
+                          name="articles"
+                          value={formData.articles}
+                          onChange={handleChange}
+                          placeholder="最近の新規事業、プロダクト、インタビュー、社長メッセージなど"
+                          rows={4}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+                <section className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+                  <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-5">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Customization</p>
+                      <h3 className="mt-3 font-serif text-3xl text-[var(--navy)]">この企業向けの調整</h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowOverrides((prev) => !prev)}
+                      className="rounded-full border border-[var(--line)] px-5 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                    >
+                      {showOverrides ? "閉じる" : "開く"}
+                    </button>
+                  </div>
+
+                  {showOverrides && (
+                    <div className="border-t border-[var(--line)] px-6 py-6">
+                      <div className="space-y-5">
+                        <TextArea
+                          label="強み（この企業向け）"
+                          name="strengthsOverride"
+                          value={formData.strengthsOverride}
+                          onChange={handleChange}
+                          placeholder="この企業で特に強調したい強みがあれば入力"
+                          rows={4}
+                        />
+                        <TextArea
+                          label="弱み（この企業向け）"
+                          name="weaknessesOverride"
+                          value={formData.weaknessesOverride}
+                          onChange={handleChange}
+                          placeholder="この企業での見せ方を変えたい弱みがあれば入力"
+                          rows={4}
+                        />
+                        <TextArea
+                          label="志望理由メモ"
+                          name="motivationMemo"
+                          value={formData.motivationMemo}
+                          onChange={handleChange}
+                          placeholder="この企業を選んだ理由、伝えたい経験、面接で触れたいこと"
+                          rows={4}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+                {error && <ErrorBanner message={error} />}
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="w-full rounded-full bg-[var(--navy)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#162c49] disabled:opacity-60"
+                >
+                  {loading ? "AIが面接対策を生成中..." : "AIで面接対策を生成する"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
 export default function InputPage() {
-  return <Suspense><InputForm /></Suspense>;
+  return (
+    <Suspense>
+      <InputForm />
+    </Suspense>
+  );
 }
 
-function Field({ label, name, value, onChange, placeholder }: {
-  label: string; name: string; value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; placeholder?: string;
+function Field({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-900 mb-1.5">{label}</label>
+      <label className="block text-sm font-semibold text-[var(--navy)]">{label}</label>
       <input
         type="text"
         name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-[#1B2D6B] focus:ring-2 focus:ring-[#1B2D6B]/10 transition-colors bg-white text-sm"
+        className="mt-2 w-full rounded-[1.25rem] border border-[var(--line)] bg-[var(--paper)] px-4 py-3 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--navy)] focus:outline-none"
       />
     </div>
   );
 }
 
-function TextArea({ label, name, value, onChange, placeholder, rows }: {
-  label: string; name: string; value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; placeholder?: string; rows?: number;
+function TextArea({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  rows,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  placeholder?: string;
+  rows?: number;
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-900 mb-1.5">{label}</label>
+      <label className="block text-sm font-semibold text-[var(--navy)]">{label}</label>
       <textarea
         name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        rows={rows || 3}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-[#1B2D6B] focus:ring-2 focus:ring-[#1B2D6B]/10 transition-colors resize-none bg-white text-sm"
+        rows={rows ?? 4}
+        className="mt-2 w-full resize-none rounded-[1.25rem] border border-[var(--line)] bg-[var(--paper)] px-4 py-3 text-sm leading-7 text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--navy)] focus:outline-none"
       />
+    </div>
+  );
+}
+
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div className="rounded-[1.25rem] border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+      {message}
     </div>
   );
 }

@@ -1,64 +1,52 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   getCompany,
   saveCompany,
   type CompanyRecord,
   type GeneratedContent,
-  PHASE_STYLES,
   PHASE_ORDER,
+  PHASE_STYLES,
 } from "@/lib/companies";
 
 const PROFILE_KEY = "naiteiNaviProfile";
 
-const SECTION_ACCENT: Record<string, string> = {
-  selfIntro: "border-l-blue-400",
-  motivation: "border-l-violet-400",
-  jobAxis: "border-l-cyan-400",
-  strengths: "border-l-emerald-400",
-  weaknesses: "border-l-orange-400",
-  careerPlan: "border-l-indigo-400",
-  closingStatement: "border-l-rose-400",
+type ExtendedCompanyRecord = CompanyRecord & {
+  strengthsOverride?: string;
+  weaknessesOverride?: string;
+  motivationMemo?: string;
 };
+
+function getInitialCompany(id: string): ExtendedCompanyRecord | null {
+  return getCompany(id) as ExtendedCompanyRecord | null;
+}
 
 export default function CompanyDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
-  const [company, setCompany] = useState<CompanyRecord | null>(null);
+  const [company, setCompany] = useState<ExtendedCompanyRecord | null>(() => getInitialCompany(id));
   const [copied, setCopied] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState<"research" | "prep">("prep");
+  const [activeTab, setActiveTab] = useState<"research" | "prep">(
+    company?.generatedContent ? "prep" : "research"
+  );
   const [editingResearch, setEditingResearch] = useState(false);
-  const [researchForm, setResearchForm] = useState({
-    companyPhilosophy: "",
-    desiredTalent: "",
-    articles: "",
-    interviewPhase: "",
-  });
+  const [researchForm, setResearchForm] = useState(() => ({
+    companyPhilosophy: company?.companyPhilosophy ?? "",
+    desiredTalent: company?.desiredTalent ?? "",
+    articles: company?.articles ?? "",
+    interviewPhase: company?.interviewPhase ?? "1次面接",
+  }));
 
   useEffect(() => {
-    const c = getCompany(id);
-    if (!c) {
+    if (!company) {
       router.push("/companies");
-      return;
     }
-    setCompany(c);
-    setResearchForm({
-      companyPhilosophy: c.companyPhilosophy,
-      desiredTalent: c.desiredTalent,
-      articles: c.articles,
-      interviewPhase: c.interviewPhase,
-    });
-    if (c.generatedContent) {
-      setActiveTab("prep");
-    } else {
-      setActiveTab("research");
-    }
-  }, [id, router]);
+  }, [company, router]);
 
   const copyToClipboard = async (text: string, key: string) => {
     await navigator.clipboard.writeText(text);
@@ -66,12 +54,29 @@ export default function CompanyDetailPage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  const updateCompany = (nextCompany: ExtendedCompanyRecord) => {
+    saveCompany(nextCompany);
+    setCompany(nextCompany);
+  };
+
   const saveResearch = () => {
     if (!company) return;
-    const updated = { ...company, ...researchForm };
-    saveCompany(updated);
-    setCompany(updated);
+    const updated = {
+      ...company,
+      companyPhilosophy: researchForm.companyPhilosophy,
+      desiredTalent: researchForm.desiredTalent,
+      articles: researchForm.articles,
+      interviewPhase: researchForm.interviewPhase,
+    };
+    updateCompany(updated);
     setEditingResearch(false);
+  };
+
+  const handlePhaseChange = (phase: string) => {
+    if (!company) return;
+    const updated = { ...company, interviewPhase: phase };
+    updateCompany(updated);
+    setResearchForm((prev) => ({ ...prev, interviewPhase: phase }));
   };
 
   const handleRegenerate = async () => {
@@ -93,19 +98,17 @@ export default function CompanyDetailPage() {
           companyPhilosophy: company.companyPhilosophy,
           desiredTalent: company.desiredTalent,
           articles: company.articles,
-          strengthsOverride: (company as CompanyRecord & { strengthsOverride?: string }).strengthsOverride ?? "",
-          weaknessesOverride: (company as CompanyRecord & { weaknessesOverride?: string }).weaknessesOverride ?? "",
-          motivationMemo: (company as CompanyRecord & { motivationMemo?: string }).motivationMemo ?? "",
+          strengthsOverride: company.strengthsOverride ?? "",
+          weaknessesOverride: company.weaknessesOverride ?? "",
+          motivationMemo: company.motivationMemo ?? "",
         }),
       });
 
       const content: GeneratedContent = await res.json();
-      const updated = { ...company, generatedContent: content };
-      saveCompany(updated);
-      setCompany(updated);
+      updateCompany({ ...company, generatedContent: content });
       setActiveTab("prep");
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     } finally {
       setRegenerating(false);
     }
@@ -114,7 +117,6 @@ export default function CompanyDetailPage() {
   if (!company) return null;
 
   const content = company.generatedContent;
-
   const sections = content
     ? [
         { key: "selfIntro", label: "自己紹介", text: content.selfIntro },
@@ -130,111 +132,123 @@ export default function CompanyDetailPage() {
   const researchFields = [
     {
       key: "companyPhilosophy",
-      label: "企業理念・ビジョン・ミッション",
-      icon: "◈",
-      placeholder: "HPや採用ページに記載されている理念・ビジョン・バリューを貼り付けてください",
+      label: "企業理念・ビジョン",
+      placeholder: "採用ページやコーポレートサイトのビジョンをメモ",
     },
     {
       key: "desiredTalent",
       label: "求める人材像",
-      icon: "◉",
-      placeholder: "採用ページの「求める人材」「こんな人と働きたい」などを貼り付けてください",
+      placeholder: "採用ページの人物像や期待される行動を整理",
     },
     {
       key: "articles",
-      label: "気になった記事・ニュース・IR情報",
-      icon: "◆",
-      placeholder: "最近の取り組み・新事業・社長インタビュー・ニュースなど",
+      label: "ニュース・IR・印象に残った情報",
+      placeholder: "直近のニュース、事業トピック、競合比較など",
     },
-  ];
+  ] as const;
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8]">
-      {/* ── Sticky header ── */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
-        <div className="max-w-2xl mx-auto px-6 h-14 flex items-center gap-4">
+    <main className="min-h-screen bg-[var(--paper)]">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(10,25,47,0.82)] backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           <button
             onClick={() => router.push("/companies")}
-            className="text-gray-400 hover:text-gray-700 transition-colors text-sm flex items-center gap-1 shrink-0"
+            className="text-sm font-semibold text-white/72 transition hover:text-white"
           >
-            ← 一覧
+            ← 一覧へ戻る
           </button>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <span className="font-bold text-gray-900 truncate">{company.companyName}</span>
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 border ${PHASE_STYLES[company.interviewPhase] ?? "bg-gray-100 text-gray-600 border-gray-200"}`}>
-              {company.interviewPhase}
-            </span>
+          <div className="text-right">
+            <p className="font-serif text-2xl tracking-[0.1em] text-white">{company.companyName}</p>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-white/45">{company.jobType}</p>
           </div>
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto px-6 py-6 space-y-5">
-        {/* ── Phase switcher ── */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-5 py-4 flex items-center gap-3 flex-wrap">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-[0.1em] shrink-0">選考フェーズ</span>
-          <div className="flex gap-2 flex-wrap">
-            {PHASE_ORDER.map((phase) => (
-              <button
-                key={phase}
-                onClick={() => {
-                  const updated = { ...company, interviewPhase: phase };
-                  saveCompany(updated);
-                  setCompany(updated);
-                  setResearchForm((prev) => ({ ...prev, interviewPhase: phase }));
-                }}
-                className={`text-xs px-3.5 py-1.5 rounded-full border font-semibold transition-all ${
-                  company.interviewPhase === phase
-                    ? PHASE_STYLES[phase]
-                    : "border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-600 bg-white"
-                }`}
-              >
-                {phase}
-              </button>
-            ))}
+      <section className="relative overflow-hidden bg-[var(--navy)] text-white">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-22"
+          style={{
+            backgroundImage:
+              "linear-gradient(90deg, rgba(7,18,35,0.9), rgba(7,18,35,0.68)), url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=80')",
+          }}
+        />
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_360px] lg:px-8">
+          <div>
+            <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">Company Focus</p>
+            <h1 className="mt-5 font-serif text-4xl leading-tight md:text-6xl">
+              企業研究と面接対策を、
+              <br />
+              同じ文脈で磨き込む。
+            </h1>
+            <p className="mt-6 max-w-2xl text-sm leading-8 text-white/72">
+              企業の価値観、求める人物像、面接フェーズを一つの視界にまとめ、
+              志望理由と逆質問の整合を崩さず更新できます。
+            </p>
+          </div>
+          <div className="rounded-[2rem] border border-white/10 bg-white/8 p-6 backdrop-blur-sm">
+            <p className="text-xs uppercase tracking-[0.32em] text-white/45">Interview Phase</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {PHASE_ORDER.map((phase) => (
+                <button
+                  key={phase}
+                  onClick={() => handlePhaseChange(phase)}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                    company.interviewPhase === phase
+                      ? PHASE_STYLES[phase]
+                      : "border border-white/12 bg-white/6 text-white/72 hover:bg-white/12"
+                  }`}
+                >
+                  {phase}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* ── Tabs ── */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-          <div className="border-b border-gray-100 px-2 flex">
-            {(["research", "prep"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setActiveTab(t)}
-                className={`px-6 py-4 text-sm font-semibold transition-all border-b-2 -mb-px ${
-                  activeTab === t
-                    ? "border-[#1B2D6B] text-[#1B2D6B]"
-                    : "border-transparent text-gray-400 hover:text-gray-600"
-                }`}
-              >
-                {t === "research" ? "企業研究情報" : `面接対策${content ? " ✓" : "（未生成）"}`}
-              </button>
-            ))}
-          </div>
+      <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
+        <div className="mb-8 flex flex-wrap gap-3">
+          {(["research", "prep"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+                activeTab === tab
+                  ? "bg-[var(--navy)] text-white"
+                  : "border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:border-[var(--navy)] hover:text-[var(--navy)]"
+              }`}
+            >
+              {tab === "research" ? "企業研究" : `面接対策${content ? "" : "（未生成）"}`}
+            </button>
+          ))}
+        </div>
 
-          {/* ── Research tab ── */}
-          {activeTab === "research" && (
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em]">企業研究メモ</p>
+        {activeTab === "research" ? (
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Research Notes</p>
+                  <h2 className="mt-3 font-serif text-3xl text-[var(--navy)]">企業理解のメモ</h2>
+                </div>
                 {!editingResearch ? (
                   <button
                     onClick={() => setEditingResearch(true)}
-                    className="text-sm text-[#1B2D6B] border border-[#1B2D6B]/30 px-3.5 py-1.5 rounded-lg hover:bg-[#1B2D6B]/5 transition-colors font-semibold"
+                    className="rounded-full border border-[var(--navy)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[var(--navy)] hover:text-white"
                   >
                     編集する
                   </button>
                 ) : (
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => setEditingResearch(false)}
-                      className="text-sm text-gray-400 px-3.5 py-1.5 rounded-lg hover:bg-gray-100 transition-colors font-semibold"
+                      className="rounded-full border border-[var(--line)] px-5 py-2 text-sm font-semibold text-[var(--muted)] transition hover:bg-[var(--paper)]"
                     >
                       キャンセル
                     </button>
                     <button
                       onClick={saveResearch}
-                      className="text-sm bg-[#1B2D6B] text-white px-3.5 py-1.5 rounded-lg hover:bg-[#0F1B50] transition-colors font-semibold"
+                      className="rounded-full bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
                     >
                       保存
                     </button>
@@ -242,148 +256,136 @@ export default function CompanyDetailPage() {
                 )}
               </div>
 
-              {researchFields.map(({ key, label, icon, placeholder }) => (
-                <div key={key} className="border border-gray-200 rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-100">
-                    <span className="text-[#1B2D6B] text-sm">{icon}</span>
-                    <p className="text-xs font-bold text-gray-700">{label}</p>
-                  </div>
-                  <div className="px-4 py-4">
+              <div className="mt-6 space-y-5">
+                {researchFields.map((field) => (
+                  <div key={field.key} className="rounded-[1.5rem] bg-[var(--paper)] p-5">
+                    <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">{field.label}</p>
                     {editingResearch ? (
                       <textarea
-                        value={researchForm[key as keyof typeof researchForm]}
-                        onChange={(e) => setResearchForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                        rows={4}
-                        placeholder={placeholder}
-                        className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:border-[#1B2D6B] focus:ring-2 focus:ring-[#1B2D6B]/10 transition-colors resize-none"
+                        value={researchForm[field.key]}
+                        onChange={(event) => setResearchForm((prev) => ({ ...prev, [field.key]: event.target.value }))}
+                        rows={5}
+                        placeholder={field.placeholder}
+                        className="mt-4 w-full rounded-[1.25rem] border border-[var(--line)] bg-white px-4 py-3 text-sm leading-7 text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--navy)] focus:outline-none"
                       />
                     ) : (
-                      <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                        {researchForm[key as keyof typeof researchForm] || (
-                          <span className="text-gray-300 italic">未入力 — 編集から追加できます</span>
-                        )}
+                      <p className="mt-4 text-sm leading-8 text-[var(--ink-soft)] whitespace-pre-line">
+                        {researchForm[field.key] || "未入力"}
                       </p>
                     )}
                   </div>
-                </div>
-              ))}
-
-              <button
-                onClick={handleRegenerate}
-                disabled={regenerating}
-                className="w-full bg-[#1B2D6B] text-white py-3.5 rounded-xl font-bold text-sm hover:bg-[#0F1B50] transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
-              >
-                {regenerating ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    生成中...
-                  </>
-                ) : content ? "企業情報をもとに再生成する ↺" : "この企業の面接対策を生成する"}
-              </button>
+                ))}
+              </div>
             </div>
-          )}
 
-          {/* ── Interview prep tab ── */}
-          {activeTab === "prep" && (
-            <div className="p-6">
-              {!content ? (
-                <div className="py-16 text-center">
-                  <div className="w-14 h-14 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-5">📋</div>
-                  <p className="font-bold text-gray-700 mb-2">まだ面接対策が生成されていません</p>
-                  <p className="text-sm text-gray-400 mb-7">企業研究情報を入力すると精度が上がります</p>
+            <aside className="space-y-6">
+              <div className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+                <div
+                  className="h-52 bg-cover bg-center"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(180deg, rgba(10,25,47,0.16), rgba(10,25,47,0.52)), url('https://images.unsplash.com/photo-1516321165247-4aa89a48be28?auto=format&fit=crop&w=1200&q=80')",
+                  }}
+                />
+                <div className="p-6">
+                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--accent)]">Regenerate</p>
+                  <h3 className="mt-3 font-serif text-3xl text-[var(--navy)]">研究内容を反映して再生成</h3>
+                  <p className="mt-4 text-sm leading-8 text-[var(--ink-soft)]">
+                    企業理解が深まったタイミングで再生成すると、志望理由や逆質問の解像度が上がります。
+                  </p>
                   <button
                     onClick={handleRegenerate}
                     disabled={regenerating}
-                    className="bg-[#1B2D6B] text-white px-8 py-3.5 rounded-xl font-bold text-sm hover:bg-[#0F1B50] transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mx-auto"
+                    className="mt-8 w-full rounded-full bg-[var(--navy)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#162c49] disabled:opacity-60"
                   >
-                    {regenerating ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        生成中...
-                      </>
-                    ) : "面接対策を生成する"}
+                    {regenerating ? "生成中..." : content ? "内容を更新して再生成" : "この企業の面接対策を生成"}
+                  </button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        ) : (
+          <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+            <div className="space-y-5">
+              {!content ? (
+                <div className="rounded-[2rem] border border-[var(--line)] bg-white p-10 text-center shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+                  <p className="font-serif text-4xl text-[var(--navy)]">面接対策はまだ生成されていません</p>
+                  <p className="mx-auto mt-4 max-w-lg text-sm leading-8 text-[var(--ink-soft)]">
+                    企業研究タブに情報を加えてから生成すると、志望理由や逆質問の精度がさらに高まります。
+                  </p>
+                  <button
+                    onClick={handleRegenerate}
+                    disabled={regenerating}
+                    className="mt-8 rounded-full bg-[var(--gold)] px-7 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d] disabled:opacity-60"
+                  >
+                    {regenerating ? "生成中..." : "面接対策を生成する"}
                   </button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {regenerating && (
-                    <div className="bg-[#F5F6F8] rounded-xl border border-gray-200 p-6 text-center">
-                      <div className="w-8 h-8 border-4 border-[#1B2D6B] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                      <p className="text-gray-500 text-sm font-medium">再生成中...</p>
-                    </div>
-                  )}
-
-                  {sections.map((s) => (
-                    <div
-                      key={s.key}
-                      className={`bg-white border border-gray-200 border-l-4 ${SECTION_ACCENT[s.key] ?? "border-l-gray-300"} rounded-xl overflow-hidden shadow-sm`}
+                <>
+                  {sections.map((section) => (
+                    <article
+                      key={section.key}
+                      className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(10,25,47,0.07)]"
                     >
-                      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                        <h3 className="font-bold text-gray-900 text-sm">{s.label}</h3>
+                      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-4">
+                        <h3 className="font-serif text-3xl text-[var(--navy)]">{section.label}</h3>
                         <button
-                          onClick={() => copyToClipboard(s.text, s.key)}
-                          className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${
-                            copied === s.key
-                              ? "bg-emerald-50 border-emerald-200 text-emerald-600"
-                              : "border-gray-200 text-gray-400 hover:border-[#1B2D6B] hover:text-[#1B2D6B]"
-                          }`}
+                          onClick={() => copyToClipboard(section.text, section.key)}
+                          className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
                         >
-                          {copied === s.key ? "コピー済み ✓" : "コピー"}
+                          {copied === section.key ? "コピー済み" : "コピー"}
                         </button>
                       </div>
-                      <div className="px-5 py-4">
-                        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{s.text}</p>
-                      </div>
-                    </div>
+                      <p className="mt-5 text-sm leading-8 text-[var(--ink-soft)] whitespace-pre-line">{section.text}</p>
+                    </article>
                   ))}
 
-                  {/* 逆質問 */}
-                  <div className="bg-white border border-gray-200 border-l-4 border-l-[#1B2D6B] rounded-xl overflow-hidden shadow-sm">
-                    <div className="flex items-center px-5 py-4 border-b border-gray-100">
-                      <h3 className="font-bold text-gray-900 text-sm flex-1">逆質問</h3>
-                    </div>
-                    <div className="px-5 py-4 space-y-4">
-                      {content.reverseQuestions.map((q, i) => (
-                        <div key={i} className="rounded-xl border border-gray-200 overflow-hidden">
-                          <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-                            <span className="text-xs font-black text-[#1B2D6B] tracking-wide">Q{i + 1}</span>
+                  <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(10,25,47,0.07)]">
+                    <h3 className="font-serif text-3xl text-[var(--navy)]">逆質問</h3>
+                    <div className="mt-6 space-y-4">
+                      {content.reverseQuestions.map((question, index) => (
+                        <div key={index} className="rounded-[1.5rem] bg-[var(--paper)] p-5">
+                          <div className="flex items-center justify-between gap-4">
+                            <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">Q{index + 1}</p>
                             <button
-                              onClick={() => copyToClipboard(`${q.opinion}${q.question}`, `q${i}`)}
-                              className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-all ${
-                                copied === `q${i}`
-                                  ? "bg-emerald-50 border-emerald-200 text-emerald-600"
-                                  : "border-gray-200 text-gray-400 hover:border-[#1B2D6B]"
-                              }`}
+                              onClick={() => copyToClipboard(`${question.opinion}${question.question}`, `q${index}`)}
+                              className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
                             >
-                              {copied === `q${i}` ? "✓" : "コピー"}
+                              {copied === `q${index}` ? "コピー済み" : "コピー"}
                             </button>
                           </div>
-                          <div className="bg-blue-50/60 px-4 py-3 border-b border-gray-100">
-                            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.1em] mb-1.5">自分の意見</p>
-                            <p className="text-sm text-gray-700 leading-relaxed">{q.opinion}</p>
-                          </div>
-                          <div className="px-4 py-3">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-1.5">質問</p>
-                            <p className="text-sm text-[#1B2D6B] font-semibold leading-relaxed">{q.question}</p>
-                          </div>
+                          <p className="mt-4 text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">自分の意見</p>
+                          <p className="mt-2 text-sm leading-8 text-[var(--ink-soft)]">{question.opinion}</p>
+                          <p className="mt-5 text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">質問</p>
+                          <p className="mt-2 text-sm font-semibold leading-8 text-[var(--navy)]">{question.question}</p>
                         </div>
                       ))}
                     </div>
-                  </div>
-
-                  <button
-                    onClick={handleRegenerate}
-                    disabled={regenerating}
-                    className="w-full mt-2 border-2 border-[#1B2D6B] text-[#1B2D6B] py-3.5 rounded-xl font-bold text-sm hover:bg-[#1B2D6B] hover:text-white transition-all disabled:opacity-60"
-                  >
-                    再生成する ↺
-                  </button>
-                </div>
+                  </article>
+                </>
               )}
             </div>
-          )}
-        </div>
-      </div>
-    </div>
+
+            <aside className="space-y-6">
+              <div className="rounded-[2rem] border border-[var(--line)] bg-[var(--navy)] p-6 text-white shadow-[0_24px_60px_rgba(10,25,47,0.14)]">
+                <p className="text-xs uppercase tracking-[0.32em] text-[var(--gold-soft)]">Action</p>
+                <h3 className="mt-3 font-serif text-3xl">次の面接に向けて更新する</h3>
+                <p className="mt-4 text-sm leading-8 text-white/72">
+                  実際に聞かれた質問や、伝わりにくかった箇所があれば企業研究タブに追記し、再生成してください。
+                </p>
+                <button
+                  onClick={handleRegenerate}
+                  disabled={regenerating}
+                  className="mt-8 w-full rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d] disabled:opacity-60"
+                >
+                  {regenerating ? "再生成中..." : "再生成する"}
+                </button>
+              </div>
+            </aside>
+          </div>
+        )}
+      </section>
+    </main>
   );
 }
