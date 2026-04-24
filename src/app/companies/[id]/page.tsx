@@ -7,6 +7,7 @@ import {
   saveCompany,
   type CompanyRecord,
   type GeneratedContent,
+  type ReverseQuestion,
   PHASE_ORDER,
   PHASE_STYLES,
 } from "@/lib/companies";
@@ -34,6 +35,8 @@ export default function CompanyDetailPage() {
   const [activeTab, setActiveTab] = useState<"research" | "prep">(
     company?.generatedContent ? "prep" : "research"
   );
+
+  // ── Research editing ──────────────────────────────────
   const [editingResearch, setEditingResearch] = useState(false);
   const [researchForm, setResearchForm] = useState(() => ({
     companyPhilosophy: company?.companyPhilosophy ?? "",
@@ -42,10 +45,16 @@ export default function CompanyDetailPage() {
     interviewPhase: company?.interviewPhase ?? "1次面接",
   }));
 
+  // ── Content editing (regular sections) ───────────────
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+
+  // ── Reverse question editing ──────────────────────────
+  const [editingRQIndex, setEditingRQIndex] = useState<number | null>(null);
+  const [rqDraft, setRqDraft] = useState<ReverseQuestion>({ opinion: "", question: "" });
+
   useEffect(() => {
-    if (!company) {
-      router.push("/companies");
-    }
+    if (!company) router.push("/companies");
   }, [company, router]);
 
   const copyToClipboard = async (text: string, key: string) => {
@@ -54,38 +63,36 @@ export default function CompanyDetailPage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const updateCompany = (nextCompany: ExtendedCompanyRecord) => {
-    saveCompany(nextCompany);
-    setCompany(nextCompany);
+  const updateCompany = (next: ExtendedCompanyRecord) => {
+    saveCompany(next);
+    setCompany(next);
   };
 
+  // ── Research save ─────────────────────────────────────
   const saveResearch = () => {
     if (!company) return;
-    const updated = {
+    updateCompany({
       ...company,
       companyPhilosophy: researchForm.companyPhilosophy,
       desiredTalent: researchForm.desiredTalent,
       articles: researchForm.articles,
       interviewPhase: researchForm.interviewPhase,
-    };
-    updateCompany(updated);
+    });
     setEditingResearch(false);
   };
 
   const handlePhaseChange = (phase: string) => {
     if (!company) return;
-    const updated = { ...company, interviewPhase: phase };
-    updateCompany(updated);
+    updateCompany({ ...company, interviewPhase: phase });
     setResearchForm((prev) => ({ ...prev, interviewPhase: phase }));
   };
 
+  // ── Regenerate ────────────────────────────────────────
   const handleRegenerate = async () => {
     if (!company) return;
     setRegenerating(true);
-
     const profile = localStorage.getItem(PROFILE_KEY);
     const profileData = profile ? JSON.parse(profile) : {};
-
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -103,7 +110,6 @@ export default function CompanyDetailPage() {
           motivationMemo: company.motivationMemo ?? "",
         }),
       });
-
       const content: GeneratedContent = await res.json();
       updateCompany({ ...company, generatedContent: content });
       setActiveTab("prep");
@@ -112,6 +118,50 @@ export default function CompanyDetailPage() {
     } finally {
       setRegenerating(false);
     }
+  };
+
+  // ── Content section edit ──────────────────────────────
+  const startEditing = (key: string, text: string) => {
+    setEditingRQIndex(null);
+    setEditingKey(key);
+    setEditDraft(text);
+  };
+
+  const cancelEditing = () => {
+    setEditingKey(null);
+    setEditDraft("");
+  };
+
+  const saveContentEdit = (key: string) => {
+    if (!company?.generatedContent) return;
+    updateCompany({
+      ...company,
+      generatedContent: { ...company.generatedContent, [key]: editDraft },
+    });
+    setEditingKey(null);
+    setEditDraft("");
+  };
+
+  // ── Reverse question edit ─────────────────────────────
+  const startEditRQ = (index: number, rq: ReverseQuestion) => {
+    setEditingKey(null);
+    setEditingRQIndex(index);
+    setRqDraft({ ...rq });
+  };
+
+  const cancelEditRQ = () => {
+    setEditingRQIndex(null);
+  };
+
+  const saveRQEdit = (index: number) => {
+    if (!company?.generatedContent) return;
+    const updated = [...company.generatedContent.reverseQuestions];
+    updated[index] = rqDraft;
+    updateCompany({
+      ...company,
+      generatedContent: { ...company.generatedContent, reverseQuestions: updated },
+    });
+    setEditingRQIndex(null);
   };
 
   if (!company) return null;
@@ -130,21 +180,9 @@ export default function CompanyDetailPage() {
     : [];
 
   const researchFields = [
-    {
-      key: "companyPhilosophy",
-      label: "企業理念・ビジョン",
-      placeholder: "採用ページやコーポレートサイトのビジョンをメモ",
-    },
-    {
-      key: "desiredTalent",
-      label: "求める人材像",
-      placeholder: "採用ページの人物像や期待される行動を整理",
-    },
-    {
-      key: "articles",
-      label: "ニュース・IR・印象に残った情報",
-      placeholder: "直近のニュース、事業トピック、競合比較など",
-    },
+    { key: "companyPhilosophy", label: "企業理念・ビジョン", placeholder: "採用ページやコーポレートサイトのビジョンをメモ" },
+    { key: "desiredTalent", label: "求める人材像", placeholder: "採用ページの人物像や期待される行動を整理" },
+    { key: "articles", label: "ニュース・IR・印象に残った情報", placeholder: "直近のニュース、事業トピック、競合比較など" },
   ] as const;
 
   return (
@@ -223,6 +261,7 @@ export default function CompanyDetailPage() {
           ))}
         </div>
 
+        {/* ── Research tab ─────────────────────────────── */}
         {activeTab === "research" ? (
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
@@ -255,7 +294,6 @@ export default function CompanyDetailPage() {
                   </div>
                 )}
               </div>
-
               <div className="mt-6 space-y-5">
                 {researchFields.map((field) => (
                   <div key={field.key} className="rounded-[1.5rem] bg-[var(--paper)] p-5">
@@ -263,13 +301,13 @@ export default function CompanyDetailPage() {
                     {editingResearch ? (
                       <textarea
                         value={researchForm[field.key]}
-                        onChange={(event) => setResearchForm((prev) => ({ ...prev, [field.key]: event.target.value }))}
+                        onChange={(e) => setResearchForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
                         rows={5}
                         placeholder={field.placeholder}
-                        className="mt-4 w-full rounded-[1.25rem] border border-[var(--line)] bg-white px-4 py-3 text-sm leading-7 text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--navy)] focus:outline-none"
+                        className="mt-4 w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-white px-4 py-3 text-sm leading-7 text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--navy)] focus:outline-none"
                       />
                     ) : (
-                      <p className="mt-4 text-sm leading-8 text-[var(--ink-soft)] whitespace-pre-line">
+                      <p className="mt-4 whitespace-pre-line text-sm leading-8 text-[var(--ink-soft)]">
                         {researchForm[field.key] || "未入力"}
                       </p>
                     )}
@@ -304,7 +342,9 @@ export default function CompanyDetailPage() {
               </div>
             </aside>
           </div>
+
         ) : (
+          /* ── Prep tab ──────────────────────────────────── */
           <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
             <div className="space-y-5">
               {!content ? (
@@ -323,42 +363,151 @@ export default function CompanyDetailPage() {
                 </div>
               ) : (
                 <>
+                  {/* Regular sections */}
                   {sections.map((section) => (
                     <article
                       key={section.key}
                       className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(10,25,47,0.07)]"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
                         <h3 className="font-serif text-3xl text-[var(--navy)]">{section.label}</h3>
-                        <button
-                          onClick={() => copyToClipboard(section.text, section.key)}
-                          className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
-                        >
-                          {copied === section.key ? "コピー済み" : "コピー"}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {editingKey === section.key ? (
+                            <>
+                              <button
+                                onClick={cancelEditing}
+                                className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--muted)] transition hover:bg-[var(--paper)]"
+                              >
+                                キャンセル
+                              </button>
+                              <button
+                                onClick={() => saveContentEdit(section.key)}
+                                className="rounded-full bg-[var(--gold)] px-4 py-2 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+                              >
+                                保存
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => copyToClipboard(section.text, section.key)}
+                                className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                              >
+                                {copied === section.key ? "コピー済み" : "コピー"}
+                              </button>
+                              <button
+                                onClick={() => startEditing(section.key, section.text)}
+                                className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                              >
+                                編集
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <p className="mt-5 text-sm leading-8 text-[var(--ink-soft)] whitespace-pre-line">{section.text}</p>
+
+                      <div className="mt-5">
+                        {editingKey === section.key ? (
+                          <textarea
+                            value={editDraft}
+                            onChange={(e) => setEditDraft(e.target.value)}
+                            rows={8}
+                            className="w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-[var(--paper)] px-4 py-3 text-sm leading-8 text-[var(--ink)] focus:border-[var(--navy)] focus:outline-none"
+                          />
+                        ) : (
+                          <p className="whitespace-pre-line text-sm leading-8 text-[var(--ink-soft)]">
+                            {section.text}
+                          </p>
+                        )}
+                      </div>
                     </article>
                   ))}
 
+                  {/* Reverse questions */}
                   <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(10,25,47,0.07)]">
-                    <h3 className="font-serif text-3xl text-[var(--navy)]">逆質問</h3>
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
+                      <h3 className="font-serif text-3xl text-[var(--navy)]">逆質問</h3>
+                      <button
+                        onClick={() =>
+                          copyToClipboard(
+                            content.reverseQuestions.map((q, i) => `Q${i + 1}\n${q.opinion}\n${q.question}`).join("\n\n"),
+                            "reverse-all"
+                          )
+                        }
+                        className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                      >
+                        {copied === "reverse-all" ? "コピー済み" : "全てコピー"}
+                      </button>
+                    </div>
+
                     <div className="mt-6 space-y-4">
                       {content.reverseQuestions.map((question, index) => (
                         <div key={index} className="rounded-[1.5rem] bg-[var(--paper)] p-5">
-                          <div className="flex items-center justify-between gap-4">
-                            <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">Q{index + 1}</p>
-                            <button
-                              onClick={() => copyToClipboard(`${question.opinion}${question.question}`, `q${index}`)}
-                              className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
-                            >
-                              {copied === `q${index}` ? "コピー済み" : "コピー"}
-                            </button>
-                          </div>
-                          <p className="mt-4 text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">自分の意見</p>
-                          <p className="mt-2 text-sm leading-8 text-[var(--ink-soft)]">{question.opinion}</p>
-                          <p className="mt-5 text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">質問</p>
-                          <p className="mt-2 text-sm font-semibold leading-8 text-[var(--navy)]">{question.question}</p>
+                          {editingRQIndex === index ? (
+                            /* Edit mode for this question */
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">Q{index + 1}</p>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={cancelEditRQ}
+                                    className="rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] transition hover:bg-white"
+                                  >
+                                    キャンセル
+                                  </button>
+                                  <button
+                                    onClick={() => saveRQEdit(index)}
+                                    className="rounded-full bg-[var(--gold)] px-3 py-1.5 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+                                  >
+                                    保存
+                                  </button>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">自分の意見</p>
+                                <textarea
+                                  value={rqDraft.opinion}
+                                  onChange={(e) => setRqDraft((prev) => ({ ...prev, opinion: e.target.value }))}
+                                  rows={3}
+                                  className="mt-2 w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-white px-4 py-3 text-sm leading-7 text-[var(--ink)] focus:border-[var(--navy)] focus:outline-none"
+                                />
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">質問</p>
+                                <textarea
+                                  value={rqDraft.question}
+                                  onChange={(e) => setRqDraft((prev) => ({ ...prev, question: e.target.value }))}
+                                  rows={2}
+                                  className="mt-2 w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-white px-4 py-3 text-sm leading-7 text-[var(--ink)] focus:border-[var(--navy)] focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            /* Read mode */
+                            <div>
+                              <div className="flex items-center justify-between gap-4">
+                                <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">Q{index + 1}</p>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => copyToClipboard(`${question.opinion}\n${question.question}`, `q${index}`)}
+                                    className="rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                                  >
+                                    {copied === `q${index}` ? "コピー済み" : "コピー"}
+                                  </button>
+                                  <button
+                                    onClick={() => startEditRQ(index, question)}
+                                    className="rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                                  >
+                                    編集
+                                  </button>
+                                </div>
+                              </div>
+                              <p className="mt-4 text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">自分の意見</p>
+                              <p className="mt-2 text-sm leading-8 text-[var(--ink-soft)]">{question.opinion}</p>
+                              <p className="mt-5 text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">質問</p>
+                              <p className="mt-2 text-sm font-semibold leading-8 text-[var(--navy)]">{question.question}</p>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
