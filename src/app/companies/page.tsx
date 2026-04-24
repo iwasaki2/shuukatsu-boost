@@ -132,8 +132,8 @@ export default function CompaniesPage() {
               一つの視界に収める。
             </h1>
             <p className="mt-6 max-w-2xl text-sm leading-8 text-white/72 md:text-base">
-              生成した回答、選考フェーズ、企業研究メモを散らさず管理。
-              志望企業ごとの進み方を、静かに見渡せるダッシュボードへ整えました。
+              生成した回答、選考フェーズ、企業研究メモをまとめて管理。
+              選考の進捗と面接準備を、一つの画面で確認できます。
             </p>
           </div>
 
@@ -144,7 +144,7 @@ export default function CompaniesPage() {
               { label: "内定", value: offerCount },
             ].map((item) => (
               <div key={item.label} className="rounded-[1.5rem] border border-white/10 bg-white/8 p-5 text-center backdrop-blur-sm">
-                <p className="font-serif text-4xl text-[var(--gold-soft)]">{item.value}</p>
+                <p className="text-4xl font-bold leading-none tracking-tight text-[var(--gold-soft)]">{item.value}</p>
                 <p className="mt-2 text-xs uppercase tracking-[0.28em] text-white/55">{item.label}</p>
               </div>
             ))}

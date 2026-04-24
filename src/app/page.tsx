@@ -39,10 +39,10 @@ const serviceHighlights = [
 ];
 
 const metrics = [
-  { value: "3 steps", label: "入力から生成まで" },
-  { value: "8 items", label: "自動生成コンテンツ" },
+  { value: "3ステップ", label: "入力から生成まで" },
+  { value: "8種類", label: "自動生成コンテンツ" },
   { value: "2社", label: "無料でお試し" },
-  { value: "24h", label: "いつでも再生成" },
+  { value: "24時間", label: "いつでも再生成" },
 ];
 
 const featureCards = [
@@ -86,7 +86,7 @@ const flow = [
   {
     step: "03",
     title: "AIが回答と逆質問を生成",
-    text: "志望理由、自己PR、弱み、キャリアプラン、逆質問まで一連で出力します。",
+    text: "志望理由、自己PR、弱み、キャリアプラン、逆質問まで、まとめて生成します。",
   },
   {
     step: "04",
@@ -300,9 +300,10 @@ export default function Home() {
         <section className="border-b border-[var(--line)] bg-white">
           <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 md:grid-cols-4 lg:px-8">
             {metrics.map((metric) => (
-              <div key={metric.label} className="border-l border-[var(--line)] pl-5 first:border-l-0 first:pl-0">
-                <p className="font-serif text-4xl text-[var(--navy)]">{metric.value}</p>
-                <p className="mt-2 text-sm uppercase tracking-[0.18em] text-[var(--muted)]">{metric.label}</p>
+              <div key={metric.label} className="border-l border-[var(--line)] pl-6 first:border-l-0 first:pl-0">
+                <span className="block h-[2px] w-7 rounded-full bg-[var(--gold)]" />
+                <p className="mt-3 text-3xl font-bold leading-none tracking-tight text-[var(--navy)]">{metric.value}</p>
+                <p className="mt-2 text-xs uppercase tracking-[0.2em] text-[var(--muted)]">{metric.label}</p>
               </div>
             ))}
           </div>
@@ -345,9 +346,9 @@ export default function Home() {
             <div className="max-w-2xl">
               <p className="text-xs uppercase tracking-[0.38em] text-[var(--accent)]">Service Design</p>
               <h2 className="mt-5 font-serif text-4xl leading-tight text-[var(--navy)] md:text-5xl">
-                就活のフローごとに、
+                企業研究から面接準備まで、
                 <br />
-                必要なアクションがつながる。
+                一つの流れで完結する。
               </h2>
             </div>
             <p className="max-w-xl text-sm leading-8 text-[var(--ink-soft)]">
