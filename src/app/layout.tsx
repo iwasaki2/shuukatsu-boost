@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "内定ナビ | AI面接対策サービス",
+  title: "就活Boost | AI面接対策サービス",
   description: "就活生のためのAI面接対策。ガクチカと企業情報を入力するだけでパーソナライズされた面接回答を生成します。",
 };
 

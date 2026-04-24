@@ -104,7 +104,7 @@ export default function ResultPage() {
     <div className="min-h-screen bg-[#F7F5F0]">
       <header className="bg-[#1B2D6B] px-6 py-4 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <span className="text-white font-bold text-xl tracking-wider">内定ナビ</span>
+          <span className="text-white font-bold text-xl tracking-wider">就活Boost</span>
           <span className="text-white/70 text-sm">
             {data.formData.companyName} | {data.formData.interviewPhase}
           </span>

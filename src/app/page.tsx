@@ -69,7 +69,7 @@ export default function Home() {
       {/* Nav */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="text-[#1B2D6B] font-bold text-xl tracking-wide">内定ナビ</span>
+          <span className="text-[#1B2D6B] font-bold text-xl tracking-wide">就活Boost</span>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-gray-500 text-sm hover:text-gray-900 transition-colors">機能</a>
             <a href="#pricing" className="text-gray-500 text-sm hover:text-gray-900 transition-colors">料金</a>
@@ -290,8 +290,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-          <span className="text-[#1B2D6B] font-bold">内定ナビ</span>
-          <p className="text-gray-400 text-sm">© 2026 内定ナビ. All rights reserved.</p>
+          <span className="text-[#1B2D6B] font-bold">就活Boost</span>
+          <p className="text-gray-400 text-sm">© 2026 就活Boost. All rights reserved.</p>
         </div>
       </footer>
     </div>

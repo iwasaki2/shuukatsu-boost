@@ -28,7 +28,7 @@ const TIPS = [
   { icon: "💡", title: "結論ファーストで話す", body: "面接では最初に結論を述べてから理由を説明するPREP法が効果的。1分以内に収まるよう練習しておこう。", bg: "bg-yellow-50" },
   { icon: "📅", title: "逆質問は必ず準備", body: "「特にありません」は評価が下がる。企業の事業戦略や仕事内容に関する質問を3つ用意しておこう。", bg: "bg-blue-50" },
   { icon: "🎯", title: "企業研究は深く", body: "「御社が好き」では刺さらない。直近のプレスリリース・IR・社長インタビューを読んで具体的な言葉で語ろう。", bg: "bg-red-50" },
-  { icon: "🔄", title: "面接後は振り返りを", body: "聞かれた質問・答えた内容・改善点をメモしておくと次の面接に活かせる。内定ナビで再生成するのも有効。", bg: "bg-purple-50" },
+  { icon: "🔄", title: "面接後は振り返りを", body: "聞かれた質問・答えた内容・改善点をメモしておくと次の面接に活かせる。就活Boostで再生成するのも有効。", bg: "bg-purple-50" },
   { icon: "💬", title: "弱みは正直に", body: "「実はありません」は逆効果。自己理解の深さが伝わる正直な弱みのほうが面接官に刺さる。", bg: "bg-green-50" },
   { icon: "📊", title: "複数社を並行受験", body: "1社に絞ると精神的に追い詰められる。5〜10社並行して選考を進めるのが理想的なペース。", bg: "bg-orange-50" },
 ];
@@ -102,7 +102,7 @@ export default function CompaniesPage() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <button onClick={() => router.push("/")} className="text-[#1B2D6B] font-bold text-xl tracking-wide">
-            内定ナビ
+            就活Boost
           </button>
           <button
             onClick={() => router.push("/input")}

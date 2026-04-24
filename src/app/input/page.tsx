@@ -202,7 +202,7 @@ function InputForm() {
             onClick={() => router.push("/")}
             className="text-white font-bold text-2xl tracking-wide mb-2 text-left"
           >
-            内定ナビ
+            就活Boost
           </button>
           <p className="text-white/50 text-xs mb-12">AI面接対策サービス</p>
 
@@ -227,7 +227,7 @@ function InputForm() {
               <p className="text-white/60 text-sm leading-relaxed italic mb-3">
                 「自分では気づいていなかった強みが言語化されて、自信を持って面接に臨めました」
               </p>
-              <p className="text-white/40 text-xs">— 内定ナビ利用者</p>
+              <p className="text-white/40 text-xs">— 就活Boost利用者</p>
             </blockquote>
           </div>
         </div>
@@ -239,7 +239,7 @@ function InputForm() {
         <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
           <div className="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={() => router.push("/")} className="text-[#1B2D6B] font-bold text-lg lg:hidden">内定ナビ</button>
+              <button onClick={() => router.push("/")} className="text-[#1B2D6B] font-bold text-lg lg:hidden">就活Boost</button>
               <button onClick={() => router.push("/companies")} className="text-gray-400 text-sm hover:text-gray-600 transition-colors">
                 ← 選考中企業
               </button>
