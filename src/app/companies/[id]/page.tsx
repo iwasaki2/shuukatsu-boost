@@ -12,6 +12,7 @@ import {
   PHASE_ORDER,
   PHASE_STYLES,
 } from "@/lib/companies";
+import { canUseFeature } from "@/lib/plans";
 import Link from "next/link";
 
 const PROFILE_KEY = "naiteiNaviProfile";
@@ -301,11 +302,20 @@ export default function CompanyDetailPage() {
         {/* ── ES tab ───────────────────────────────────── */}
         {activeTab === "es" ? (
           <div className="space-y-5">
-            {!company.esContent ? (
+            {!canUseFeature("esGeneration") ? (
+              <div className="rounded-[2rem] border border-[var(--line)] bg-white p-10 text-center shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
+                <span className="inline-block rounded-full bg-[var(--gold)] px-4 py-1.5 text-xs font-bold text-[var(--navy)]">Growth プランで利用可能</span>
+                <p className="mt-4 text-xl font-bold text-[var(--navy)]">ES・書類対策は Growth プランの機能です</p>
+                <p className="mt-3 text-sm text-[var(--muted)]">自己PR・アピールポイント・志望理由を各200字で自動生成します</p>
+                <Link href="/billing" className="mt-6 inline-block rounded-full bg-[var(--navy)] px-7 py-3 text-sm font-semibold text-white transition hover:bg-[#14246a]">
+                  プランを見る（¥980/月〜）
+                </Link>
+              </div>
+            ) : !company.esContent ? (
               <div className="rounded-[2rem] border border-[var(--line)] bg-white p-10 text-center shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
                 <p className="text-2xl font-bold text-[var(--navy)]">ES・書類対策を生成します</p>
                 <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-[var(--ink-soft)]">
-                  自己PR・ガクチカ・志望動機を各200字程度のES用文章として生成します。<br />
+                  自己PR・アピールポイント・志望理由を各200字程度のES用文章として生成します。<br />
                   面接対策を先に生成しておくと、より精度が上がります。
                 </p>
                 <button
@@ -618,7 +628,7 @@ export default function CompanyDetailPage() {
             </div>
 
             <aside className="space-y-4">
-              {content && (
+              {content && canUseFeature("memorization") && (
                 <Link
                   href={`/companies/${id}/memorize`}
                   className="flex items-center justify-between rounded-[1.75rem] border border-[var(--gold)] bg-[var(--gold)] p-5 text-[var(--navy)] shadow-[0_8px_30px_rgba(26,45,122,0.15)] transition hover:bg-[#50a8ff]"

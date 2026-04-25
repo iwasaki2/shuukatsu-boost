@@ -170,7 +170,7 @@ export default function Home() {
           <nav className="hidden items-center gap-8 text-sm text-white/70 md:flex">
             <a href="#concept" className="transition hover:text-white">コンセプト</a>
             <a href="#service" className="transition hover:text-white">機能</a>
-            <a href="#pricing" className="transition hover:text-white">料金</a>
+            <Link href="/billing" className="transition hover:text-white">料金</Link>
             <Link href="/companies" className="transition hover:text-white">選考一覧</Link>
           </nav>
           <div className="flex items-center gap-3">

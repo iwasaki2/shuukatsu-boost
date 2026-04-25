@@ -2,7 +2,8 @@
 
 import { Suspense, useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getCompany, saveCompany, type CompanyRecord } from "@/lib/companies";
+import { getCompany, saveCompany, getCompanies, type CompanyRecord } from "@/lib/companies";
+import { getCompanyLimit, getCurrentPlan } from "@/lib/plans";
 
 interface FormData {
   name: string;
@@ -190,6 +191,16 @@ function InputForm() {
     if (!formData.companyName || !formData.jobType) {
       setError("企業名と希望職種を入力してください。");
       return;
+    }
+
+    // プラン上限チェック（新規追加時のみ）
+    if (!editId) {
+      const limit = getCompanyLimit();
+      const existing = getCompanies().length;
+      if (existing >= limit) {
+        setError(`Starter プランでは${limit}社までです。Growth プラン（¥980/月）にアップグレードすると無制限になります。`);
+        return;
+      }
     }
 
     setError("");
