@@ -18,7 +18,7 @@ export interface GeneratedContent {
 
 export interface EsContent {
   esSelfPR: string;
-  esGakuchika: string;
+  esAppealPoints: string;
   esMotivation: string;
 }
 

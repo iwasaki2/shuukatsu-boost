@@ -330,8 +330,8 @@ export default function CompanyDetailPage() {
                 </div>
                 {[
                   { key: "esSelfPR", label: "自己PR" },
-                  { key: "esGakuchika", label: "学生時代に力を入れたこと（ガクチカ）" },
-                  { key: "esMotivation", label: "志望動機" },
+                  { key: "esAppealPoints", label: "アピールポイント" },
+                  { key: "esMotivation", label: "志望理由" },
                 ].map((section) => {
                   const text = company.esContent?.[section.key as keyof EsContent] ?? "";
                   return (
