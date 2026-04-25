@@ -1,3 +1,5 @@
+import { getCurrentUserId } from "./auth";
+
 export interface ReverseQuestion {
   opinion: string;
   question: string;
@@ -14,6 +16,12 @@ export interface GeneratedContent {
   closingStatement: string;
 }
 
+export interface EsContent {
+  esSelfPR: string;
+  esGakuchika: string;
+  esMotivation: string;
+}
+
 export interface CompanyRecord {
   id: string;
   companyName: string;
@@ -23,15 +31,21 @@ export interface CompanyRecord {
   desiredTalent: string;
   articles: string;
   generatedContent: GeneratedContent | null;
+  esContent?: EsContent | null;
   createdAt: string;
   updatedAt: string;
 }
 
-const COMPANIES_KEY = "naiteiNaviCompanies";
+function storageKey(base: string): string {
+  const uid = getCurrentUserId();
+  return uid ? `gkb_${uid}_${base}` : base;
+}
+
+const BASE_KEY = "naiteiNaviCompanies";
 
 export function getCompanies(): CompanyRecord[] {
   if (typeof window === "undefined") return [];
-  const stored = localStorage.getItem(COMPANIES_KEY);
+  const stored = localStorage.getItem(storageKey(BASE_KEY));
   return stored ? JSON.parse(stored) : [];
 }
 
@@ -42,24 +56,25 @@ export function getCompany(id: string): CompanyRecord | null {
 export function saveCompany(company: CompanyRecord): void {
   const companies = getCompanies();
   const index = companies.findIndex((c) => c.id === company.id);
+  const updated = { ...company, updatedAt: new Date().toISOString() };
   if (index >= 0) {
-    companies[index] = { ...company, updatedAt: new Date().toISOString() };
+    companies[index] = updated;
   } else {
-    companies.unshift(company);
+    companies.unshift(updated);
   }
-  localStorage.setItem(COMPANIES_KEY, JSON.stringify(companies));
+  localStorage.setItem(storageKey(BASE_KEY), JSON.stringify(companies));
 }
 
 export function deleteCompany(id: string): void {
   const companies = getCompanies().filter((c) => c.id !== id);
-  localStorage.setItem(COMPANIES_KEY, JSON.stringify(companies));
+  localStorage.setItem(storageKey(BASE_KEY), JSON.stringify(companies));
 }
 
 export const PHASE_STYLES: Record<string, string> = {
-  "1次面接": "bg-[rgba(10,25,47,0.06)] text-[#526173] border border-[rgba(10,25,47,0.12)]",
-  "2次面接": "bg-[rgba(10,25,47,0.11)] text-[#0c1c31] border border-[rgba(10,25,47,0.18)]",
-  "最終面接": "bg-[#0c1c31] text-white border border-[#0c1c31]",
-  "内定": "bg-[#d1af61] text-[#0c1c31] border border-[#d1af61]",
+  "1次面接": "bg-[rgba(26,45,122,0.06)] text-[#4a5780] border border-[rgba(26,45,122,0.12)]",
+  "2次面接": "bg-[rgba(26,45,122,0.11)] text-[#1a2d7a] border border-[rgba(26,45,122,0.18)]",
+  "最終面接": "bg-[#1a2d7a] text-white border border-[#1a2d7a]",
+  "内定": "bg-[#1a7fe5] text-white border border-[#1a7fe5]",
 };
 
 export const PHASE_ORDER = ["1次面接", "2次面接", "最終面接", "内定"];

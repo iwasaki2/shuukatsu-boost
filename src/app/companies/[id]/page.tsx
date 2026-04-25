@@ -7,10 +7,12 @@ import {
   saveCompany,
   type CompanyRecord,
   type GeneratedContent,
+  type EsContent,
   type ReverseQuestion,
   PHASE_ORDER,
   PHASE_STYLES,
 } from "@/lib/companies";
+import Link from "next/link";
 
 const PROFILE_KEY = "naiteiNaviProfile";
 
@@ -32,9 +34,10 @@ export default function CompanyDetailPage() {
   const [company, setCompany] = useState<ExtendedCompanyRecord | null>(() => getInitialCompany(id));
   const [copied, setCopied] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState<"research" | "prep">(
+  const [activeTab, setActiveTab] = useState<"research" | "prep" | "es">(
     company?.generatedContent ? "prep" : "research"
   );
+  const [generatingEs, setGeneratingEs] = useState(false);
 
   // ── Research editing ──────────────────────────────────
   const [editingResearch, setEditingResearch] = useState(false);
@@ -117,6 +120,40 @@ export default function CompanyDetailPage() {
       console.error(error);
     } finally {
       setRegenerating(false);
+    }
+  };
+
+  // ── ES generation ────────────────────────────────────
+  const handleGenerateEs = async () => {
+    if (!company) return;
+    setGeneratingEs(true);
+    const profile = localStorage.getItem("naiteiNaviProfile");
+    const profileData = profile ? JSON.parse(profile) : {};
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...profileData,
+          companyName: company.companyName,
+          jobType: company.jobType,
+          interviewPhase: company.interviewPhase,
+          companyPhilosophy: company.companyPhilosophy,
+          desiredTalent: company.desiredTalent,
+          articles: company.articles,
+          strengthsOverride: (company as ExtendedCompanyRecord).strengthsOverride ?? "",
+          weaknessesOverride: (company as ExtendedCompanyRecord).weaknessesOverride ?? "",
+          motivationMemo: (company as ExtendedCompanyRecord).motivationMemo ?? "",
+          mode: "es",
+        }),
+      });
+      const esContent: EsContent = await res.json();
+      updateCompany({ ...company, esContent });
+      setActiveTab("es");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setGeneratingEs(false);
     }
   };
 
@@ -246,7 +283,7 @@ export default function CompanyDetailPage() {
 
       <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
         <div className="mb-8 flex flex-wrap gap-3">
-          {(["research", "prep"] as const).map((tab) => (
+          {(["research", "prep", "es"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -256,13 +293,77 @@ export default function CompanyDetailPage() {
                   : "border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:border-[var(--navy)] hover:text-[var(--navy)]"
               }`}
             >
-              {tab === "research" ? "企業研究" : `面接対策${content ? "" : "（未生成）"}`}
+              {tab === "research" ? "企業研究" : tab === "prep" ? `面接対策${content ? "" : "（未生成）"}` : `ES対策${company.esContent ? "" : "（未生成）"}`}
             </button>
           ))}
         </div>
 
-        {/* ── Research tab ─────────────────────────────── */}
-        {activeTab === "research" ? (
+        {/* ── ES tab ───────────────────────────────────── */}
+        {activeTab === "es" ? (
+          <div className="space-y-5">
+            {!company.esContent ? (
+              <div className="rounded-[2rem] border border-[var(--line)] bg-white p-10 text-center shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
+                <p className="text-2xl font-bold text-[var(--navy)]">ES・書類対策を生成します</p>
+                <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-[var(--ink-soft)]">
+                  自己PR・ガクチカ・志望動機を各200字程度のES用文章として生成します。<br />
+                  面接対策を先に生成しておくと、より精度が上がります。
+                </p>
+                <button
+                  onClick={handleGenerateEs}
+                  disabled={generatingEs}
+                  className="mt-8 rounded-full bg-[var(--gold)] px-8 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff] disabled:opacity-60"
+                >
+                  {generatingEs ? "生成中..." : "ES用文章を生成する"}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-[var(--muted)]">各200〜250字のES用文章です。コピーしてそのまま使えます。</p>
+                  <button
+                    onClick={handleGenerateEs}
+                    disabled={generatingEs}
+                    className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)] disabled:opacity-50"
+                  >
+                    {generatingEs ? "生成中..." : "再生成"}
+                  </button>
+                </div>
+                {[
+                  { key: "esSelfPR", label: "自己PR" },
+                  { key: "esGakuchika", label: "学生時代に力を入れたこと（ガクチカ）" },
+                  { key: "esMotivation", label: "志望動機" },
+                ].map((section) => {
+                  const text = company.esContent?.[section.key as keyof EsContent] ?? "";
+                  return (
+                    <article
+                      key={section.key}
+                      className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_16px_40px_rgba(26,45,122,0.06)]"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
+                        <div>
+                          <h3 className="text-base font-bold text-[var(--navy)]">{section.label}</h3>
+                          <p className="mt-0.5 text-xs text-[var(--muted)]">{text.length}字</p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(text);
+                            setCopied(section.key);
+                            setTimeout(() => setCopied(null), 2000);
+                          }}
+                          className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                        >
+                          {copied === section.key ? "コピー済み" : "コピー"}
+                        </button>
+                      </div>
+                      <p className="mt-5 whitespace-pre-line text-sm leading-8 text-[var(--ink-soft)]">{text}</p>
+                    </article>
+                  );
+                })}
+              </>
+            )}
+          </div>
+
+        ) : activeTab === "research" ? (
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
@@ -516,17 +617,32 @@ export default function CompanyDetailPage() {
               )}
             </div>
 
-            <aside className="space-y-6">
-              <div className="rounded-[2rem] border border-[var(--line)] bg-[var(--navy)] p-6 text-white shadow-[0_24px_60px_rgba(26,45,122,0.14)]">
+            <aside className="space-y-4">
+              {content && (
+                <Link
+                  href={`/companies/${id}/memorize`}
+                  className="flex items-center justify-between rounded-[1.75rem] border border-[var(--gold)] bg-[var(--gold)] p-5 text-[var(--navy)] shadow-[0_8px_30px_rgba(26,45,122,0.15)] transition hover:bg-[#50a8ff]"
+                >
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[rgba(26,45,122,0.6)]">Memorize</p>
+                    <p className="mt-1 text-base font-bold">暗記モードで練習する</p>
+                    <p className="mt-0.5 text-xs text-[rgba(26,45,122,0.65)]">フラッシュカードで回答を暗記</p>
+                  </div>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </Link>
+              )}
+              <div className="rounded-[1.75rem] border border-[var(--line)] bg-[var(--navy)] p-6 text-white shadow-[0_16px_40px_rgba(26,45,122,0.14)]">
                 <p className="text-xs uppercase tracking-[0.32em] text-[var(--gold-soft)]">Action</p>
-                <h3 className="mt-3 font-serif text-3xl">次の面接に向けて更新する</h3>
-                <p className="mt-4 text-sm leading-8 text-white/72">
-                  実際に聞かれた質問や、伝わりにくかった箇所があれば企業研究タブに追記し、再生成してください。
+                <p className="mt-3 text-base font-bold">次の面接に向けて更新する</p>
+                <p className="mt-3 text-sm leading-7 text-white/72">
+                  実際に聞かれた質問や伝わりにくかった箇所を企業研究タブに追記し、再生成してください。
                 </p>
                 <button
                   onClick={handleRegenerate}
                   disabled={regenerating}
-                  className="mt-8 w-full rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff] disabled:opacity-60"
+                  className="mt-6 w-full rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff] disabled:opacity-60"
                 >
                   {regenerating ? "再生成中..." : "再生成する"}
                 </button>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AnimateIn } from "@/components/AnimateIn";
 import { MobileNav } from "@/components/MobileNav";
+import { UserMenu } from "@/components/UserMenu";
 
 const strengths = [
   "志望理由・自己PR・逆質問を自動生成",
@@ -173,6 +174,7 @@ export default function Home() {
             <Link href="/companies" className="transition hover:text-white">選考一覧</Link>
           </nav>
           <div className="flex items-center gap-3">
+            <UserMenu />
             <Link
               href="/input"
               className="hidden rounded-full border border-[var(--gold)] bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff] md:inline-flex"
