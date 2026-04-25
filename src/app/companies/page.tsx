@@ -60,13 +60,39 @@ export default function CompaniesPage() {
   const [tab, setTab] = useState<"companies" | "profile">("companies");
   const [companies, setCompanies] = useState<CompanyRecord[]>(() => getCompanies());
   const [profile] = useState<Profile | null>(() => getStoredProfile());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const refreshCompanies = () => setCompanies(getCompanies());
 
   const handleDelete = (id: string, name: string) => {
     if (!confirm(`「${name}」を選考リストから削除しますか？`)) return;
     deleteCompany(id);
+    setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
     refreshCompanies();
+  };
+
+  const handleBulkDelete = () => {
+    if (selected.size === 0) return;
+    if (!confirm(`選択した ${selected.size} 社を削除しますか？`)) return;
+    selected.forEach((id) => deleteCompany(id));
+    setSelected(new Set());
+    refreshCompanies();
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === companies.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(companies.map((c) => c.id)));
+    }
   };
 
   const handlePhaseChange = (company: CompanyRecord, phase: string) => {
@@ -175,14 +201,24 @@ export default function CompaniesPage() {
                 <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
                   <div>
                     <p className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Selection Phase</p>
-                    <h2 className="mt-3 font-serif text-3xl text-[var(--navy)]">進行中の選考を一覧管理</h2>
+                    <h2 className="mt-3 text-2xl font-bold text-[var(--navy)]">進行中の選考を一覧管理</h2>
                   </div>
-                  <button
-                    onClick={() => router.push("/input")}
-                    className="rounded-full border border-[var(--navy)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[var(--navy)] hover:text-white"
-                  >
-                    面接対策を追加
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    {selected.size > 0 && (
+                      <button
+                        onClick={handleBulkDelete}
+                        className="rounded-full border border-red-200 bg-red-50 px-5 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                      >
+                        {selected.size}社を削除
+                      </button>
+                    )}
+                    <button
+                      onClick={() => router.push("/input")}
+                      className="rounded-full border border-[var(--navy)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[var(--navy)] hover:text-white"
+                    >
+                      面接対策を追加
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-2">
@@ -211,6 +247,22 @@ export default function CompaniesPage() {
                   </div>
                 ) : (
                   <div className="mt-6 space-y-3">
+                    {/* 全選択行 */}
+                    <div className="flex items-center justify-between px-1 pb-2">
+                      <label className="flex cursor-pointer items-center gap-2.5 text-xs font-semibold text-[var(--muted)] hover:text-[var(--navy)]">
+                        <input
+                          type="checkbox"
+                          checked={selected.size === companies.length && companies.length > 0}
+                          onChange={toggleSelectAll}
+                          className="h-4 w-4 rounded accent-[var(--navy)]"
+                        />
+                        全選択 ({companies.length}社)
+                      </label>
+                      {selected.size > 0 && (
+                        <span className="text-xs text-[var(--muted)]">{selected.size}社を選択中</span>
+                      )}
+                    </div>
+
                     {companies.map((company) => {
                       const phaseIndex = PHASE_ORDER.indexOf(company.interviewPhase);
                       const initial = company.companyName.replace(/株式会社|有限会社|合同会社/g, "").trim().charAt(0);
@@ -218,10 +270,22 @@ export default function CompaniesPage() {
                       return (
                         <article
                           key={company.id}
-                          className="overflow-hidden rounded-[1.5rem] border border-[var(--line)] bg-white transition duration-200 hover:shadow-[0_12px_40px_rgba(26,45,122,0.09)]"
+                          className={`overflow-hidden rounded-[1.5rem] border transition duration-200 hover:shadow-[0_12px_40px_rgba(26,45,122,0.09)] ${
+                            selected.has(company.id)
+                              ? "border-[var(--gold)] bg-[var(--sand)]"
+                              : "border-[var(--line)] bg-white"
+                          }`}
                         >
                           {/* Main row */}
-                          <div className="flex items-center gap-4 p-4 lg:p-5">
+                          <div className="flex items-center gap-3 p-4 lg:p-5">
+                            {/* Checkbox */}
+                            <input
+                              type="checkbox"
+                              checked={selected.has(company.id)}
+                              onChange={() => toggleSelect(company.id)}
+                              className="h-4 w-4 shrink-0 rounded accent-[var(--navy)]"
+                              onClick={(e) => e.stopPropagation()}
+                            />
                             {/* Avatar */}
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--navy)] text-base font-bold text-[var(--gold-soft)]">
                               {initial}
