@@ -392,7 +392,7 @@ export default function Home() {
           <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">
             <AnimateIn>
               <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">How It Works</p>
-              <h2 className="mt-5 font-serif text-4xl leading-tight md:text-5xl">
+              <h2 className="mt-5 text-4xl font-bold leading-tight md:text-5xl">
                 使い方は
                 <br />
                 4ステップです。
@@ -405,7 +405,7 @@ export default function Home() {
               {flow.map((item, i) => (
                 <AnimateIn key={item.step} delay={i * 80}>
                   <div className="rounded-[1.75rem] border border-white/10 bg-white/6 p-6 backdrop-blur-sm transition duration-300 hover:bg-white/10">
-                    <p className="font-serif text-4xl text-[var(--gold-soft)]">{item.step}</p>
+                    <p className="text-3xl font-bold tabular-nums tracking-tight text-[var(--gold-soft)]">{item.step}</p>
                     <h3 className="mt-4 text-xl font-semibold text-white">{item.title}</h3>
                     <p className="mt-4 text-sm leading-7 text-white/72">{item.text}</p>
                   </div>
