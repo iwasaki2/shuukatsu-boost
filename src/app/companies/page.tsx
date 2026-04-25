@@ -101,9 +101,8 @@ export default function CompaniesPage() {
     <main className="min-h-screen bg-[var(--paper)]">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(26,45,122,0.82)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <button onClick={() => router.push("/")} className="flex items-center gap-2.5">
-            <img src="/logo-icon.png" alt="ガクチカBoost" className="h-8 w-8 rounded-full" />
-            <span className="text-base font-bold text-white">ガクチカBoost</span>
+          <button onClick={() => router.push("/")}>
+            <img src="/logo-icon.png" alt="ガクチカBoost" className="h-10 w-10 rounded-full" />
           </button>
           <button
             onClick={() => router.push("/input")}

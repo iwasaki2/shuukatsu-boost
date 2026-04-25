@@ -165,13 +165,7 @@ export default function Home() {
       {/* ── Header ───────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[rgba(26,45,122,0.80)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <div className="flex items-center gap-2.5">
-            <img src="/logo-icon.png" alt="ガクチカBoost" className="h-9 w-9 rounded-full" />
-            <div>
-              <p className="text-lg font-bold tracking-wide text-white">ガクチカBoost</p>
-              <p className="text-[10px] uppercase tracking-[0.4em] text-white/40">AI面接対策</p>
-            </div>
-          </div>
+          <img src="/logo-icon.png" alt="ガクチカBoost" className="h-10 w-10 rounded-full" />
           <nav className="hidden items-center gap-8 text-sm text-white/70 md:flex">
             <a href="#concept" className="transition hover:text-white">コンセプト</a>
             <a href="#service" className="transition hover:text-white">機能</a>
@@ -203,11 +197,9 @@ export default function Home() {
 
         <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-28">
           <div className="max-w-3xl">
-            <div className="hero-1 mb-6 flex items-center gap-3">
-              <img src="/logo-icon.png" alt="ガクチカBoost" className="h-12 w-12 rounded-full" />
-              <div>
-                <p className="text-lg font-bold text-white">ガクチカBoost</p>
-                <p className="text-[10px] uppercase tracking-[0.4em] text-[var(--gold-soft)]">AI面接対策ツール</p>
+            <div className="hero-1 mb-8">
+              <div className="inline-block rounded-2xl bg-white px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.18)]">
+                <img src="/logo-full.png" alt="ガクチカBoost" className="h-16 md:h-20" />
               </div>
             </div>
             <h1 className="hero-2 max-w-4xl font-serif text-5xl leading-[1.05] tracking-[0.02em] text-white md:text-7xl">

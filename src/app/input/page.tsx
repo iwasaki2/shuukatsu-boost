@@ -248,9 +248,8 @@ function InputForm() {
           />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(26,127,229,0.2),transparent_24%)]" />
           <div className="relative flex h-full flex-col px-10 py-12 xl:px-14">
-            <button onClick={() => router.push("/")} className="flex items-center gap-2.5">
+            <button onClick={() => router.push("/")}>
               <img src="/logo-icon.png" alt="ガクチカBoost" className="h-10 w-10 rounded-full" />
-              <span className="text-lg font-bold text-white">ガクチカBoost</span>
             </button>
 
             {step === 1 ? (
