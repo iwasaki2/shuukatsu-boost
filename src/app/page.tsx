@@ -197,11 +197,9 @@ export default function Home() {
 
         <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-28">
           <div className="max-w-3xl">
-            <div className="hero-1 mb-8">
-              <div className="inline-block rounded-2xl bg-white px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.18)]">
-                <img src="/logo-full.png" alt="ガクチカBoost" className="h-16 md:h-20" />
-              </div>
-            </div>
+            <p className="hero-1 mb-5 text-xs uppercase tracking-[0.45em] text-[var(--gold-soft)]">
+              AI面接対策ツール
+            </p>
             <h1 className="hero-2 max-w-4xl font-serif text-5xl leading-[1.05] tracking-[0.02em] text-white md:text-7xl">
               志望企業ごとの
               <br />
