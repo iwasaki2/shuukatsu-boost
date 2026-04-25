@@ -187,7 +187,7 @@ export default function CompanyDetailPage() {
 
   return (
     <main className="min-h-screen bg-[var(--paper)]">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(10,25,47,0.82)] backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(26,45,122,0.82)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           <button
             onClick={() => router.push("/companies")}
@@ -207,7 +207,7 @@ export default function CompanyDetailPage() {
           className="absolute inset-0 bg-cover bg-center opacity-22"
           style={{
             backgroundImage:
-              "linear-gradient(90deg, rgba(7,18,35,0.9), rgba(7,18,35,0.68)), url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=80')",
+              "linear-gradient(90deg, rgba(20,36,100,0.9), rgba(20,36,100,0.68)), url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=80')",
           }}
         />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_360px] lg:px-8">
@@ -264,7 +264,7 @@ export default function CompanyDetailPage() {
         {/* ── Research tab ─────────────────────────────── */}
         {activeTab === "research" ? (
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+            <div className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Research Notes</p>
@@ -287,7 +287,7 @@ export default function CompanyDetailPage() {
                     </button>
                     <button
                       onClick={saveResearch}
-                      className="rounded-full bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+                      className="rounded-full bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
                     >
                       保存
                     </button>
@@ -317,12 +317,12 @@ export default function CompanyDetailPage() {
             </div>
 
             <aside className="space-y-6">
-              <div className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+              <div className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
                 <div
                   className="h-52 bg-cover bg-center"
                   style={{
                     backgroundImage:
-                      "linear-gradient(180deg, rgba(10,25,47,0.16), rgba(10,25,47,0.52)), url('https://images.unsplash.com/photo-1516321165247-4aa89a48be28?auto=format&fit=crop&w=1200&q=80')",
+                      "linear-gradient(180deg, rgba(26,45,122,0.16), rgba(26,45,122,0.52)), url('https://images.unsplash.com/photo-1516321165247-4aa89a48be28?auto=format&fit=crop&w=1200&q=80')",
                   }}
                 />
                 <div className="p-6">
@@ -334,7 +334,7 @@ export default function CompanyDetailPage() {
                   <button
                     onClick={handleRegenerate}
                     disabled={regenerating}
-                    className="mt-8 w-full rounded-full bg-[var(--navy)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#162c49] disabled:opacity-60"
+                    className="mt-8 w-full rounded-full bg-[var(--navy)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#14246a] disabled:opacity-60"
                   >
                     {regenerating ? "生成中..." : content ? "内容を更新して再生成" : "この企業の面接対策を生成"}
                   </button>
@@ -348,7 +348,7 @@ export default function CompanyDetailPage() {
           <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
             <div className="space-y-5">
               {!content ? (
-                <div className="rounded-[2rem] border border-[var(--line)] bg-white p-10 text-center shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+                <div className="rounded-[2rem] border border-[var(--line)] bg-white p-10 text-center shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
                   <p className="font-serif text-4xl text-[var(--navy)]">面接対策はまだ生成されていません</p>
                   <p className="mx-auto mt-4 max-w-lg text-sm leading-8 text-[var(--ink-soft)]">
                     企業研究タブに情報を加えてから生成すると、志望理由や逆質問の精度がさらに高まります。
@@ -356,7 +356,7 @@ export default function CompanyDetailPage() {
                   <button
                     onClick={handleRegenerate}
                     disabled={regenerating}
-                    className="mt-8 rounded-full bg-[var(--gold)] px-7 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d] disabled:opacity-60"
+                    className="mt-8 rounded-full bg-[var(--gold)] px-7 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff] disabled:opacity-60"
                   >
                     {regenerating ? "生成中..." : "面接対策を生成する"}
                   </button>
@@ -367,7 +367,7 @@ export default function CompanyDetailPage() {
                   {sections.map((section) => (
                     <article
                       key={section.key}
-                      className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(10,25,47,0.07)]"
+                      className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(26,45,122,0.07)]"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
                         <h3 className="font-serif text-3xl text-[var(--navy)]">{section.label}</h3>
@@ -382,7 +382,7 @@ export default function CompanyDetailPage() {
                               </button>
                               <button
                                 onClick={() => saveContentEdit(section.key)}
-                                className="rounded-full bg-[var(--gold)] px-4 py-2 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+                                className="rounded-full bg-[var(--gold)] px-4 py-2 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
                               >
                                 保存
                               </button>
@@ -424,7 +424,7 @@ export default function CompanyDetailPage() {
                   ))}
 
                   {/* Reverse questions */}
-                  <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(10,25,47,0.07)]">
+                  <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(26,45,122,0.07)]">
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
                       <h3 className="font-serif text-3xl text-[var(--navy)]">逆質問</h3>
                       <button
@@ -457,7 +457,7 @@ export default function CompanyDetailPage() {
                                   </button>
                                   <button
                                     onClick={() => saveRQEdit(index)}
-                                    className="rounded-full bg-[var(--gold)] px-3 py-1.5 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+                                    className="rounded-full bg-[var(--gold)] px-3 py-1.5 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
                                   >
                                     保存
                                   </button>
@@ -517,7 +517,7 @@ export default function CompanyDetailPage() {
             </div>
 
             <aside className="space-y-6">
-              <div className="rounded-[2rem] border border-[var(--line)] bg-[var(--navy)] p-6 text-white shadow-[0_24px_60px_rgba(10,25,47,0.14)]">
+              <div className="rounded-[2rem] border border-[var(--line)] bg-[var(--navy)] p-6 text-white shadow-[0_24px_60px_rgba(26,45,122,0.14)]">
                 <p className="text-xs uppercase tracking-[0.32em] text-[var(--gold-soft)]">Action</p>
                 <h3 className="mt-3 font-serif text-3xl">次の面接に向けて更新する</h3>
                 <p className="mt-4 text-sm leading-8 text-white/72">
@@ -526,7 +526,7 @@ export default function CompanyDetailPage() {
                 <button
                   onClick={handleRegenerate}
                   disabled={regenerating}
-                  className="mt-8 w-full rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d] disabled:opacity-60"
+                  className="mt-8 w-full rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff] disabled:opacity-60"
                 >
                   {regenerating ? "再生成中..." : "再生成する"}
                 </button>

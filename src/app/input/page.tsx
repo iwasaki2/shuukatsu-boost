@@ -243,14 +243,14 @@ function InputForm() {
             className="absolute inset-0 bg-cover bg-center opacity-22"
             style={{
               backgroundImage:
-                "linear-gradient(180deg, rgba(7,18,35,0.9), rgba(7,18,35,0.74)), url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80')",
+                "linear-gradient(180deg, rgba(20,36,100,0.9), rgba(20,36,100,0.74)), url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80')",
             }}
           />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(209,175,97,0.2),transparent_24%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(26,127,229,0.2),transparent_24%)]" />
           <div className="relative flex h-full flex-col px-10 py-12 xl:px-14">
-            <button onClick={() => router.push("/")} className="text-left">
-              <p className="font-serif text-3xl tracking-[0.12em]">就活Boost</p>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.45em] text-white/45">Interview Builder</p>
+            <button onClick={() => router.push("/")} className="flex items-center gap-2.5">
+              <img src="/logo-icon.png" alt="ガクチカBoost" className="h-10 w-10 rounded-full" />
+              <span className="text-lg font-bold text-white">ガクチカBoost</span>
             </button>
 
             {step === 1 ? (
@@ -334,7 +334,7 @@ function InputForm() {
                   ← 選考一覧
                 </button>
                 <button onClick={() => router.push("/")} className="font-serif text-2xl text-[var(--navy)] lg:hidden">
-                  就活Boost
+                  ガクチカBoost
                 </button>
               </div>
               {profileLoaded && (
@@ -392,7 +392,7 @@ function InputForm() {
                   </p>
                 </div>
 
-                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(26,45,122,0.06)]">
                   <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">基本情報</p>
                   <div className="grid gap-4 md:grid-cols-2">
                     <Field label="名前" name="name" value={formData.name} onChange={handleChange} placeholder="山田 太郎" />
@@ -403,7 +403,7 @@ function InputForm() {
                   </div>
                 </section>
 
-                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(26,45,122,0.06)]">
                   <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">自己分析</p>
                   <div className="space-y-5">
                     <TextArea
@@ -444,7 +444,7 @@ function InputForm() {
                   </div>
                 </section>
 
-                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(26,45,122,0.06)]">
                   <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">バックグラウンド（任意）</p>
                   <TextArea
                     label="自己バックグラウンド"
@@ -461,7 +461,7 @@ function InputForm() {
 
                 <button
                   onClick={handleNext}
-                  className="w-full rounded-full bg-[var(--navy)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#162c49] active:scale-[0.98]"
+                  className="w-full rounded-full bg-[var(--navy)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#14246a] active:scale-[0.98]"
                 >
                   企業情報の入力へ進む →
                 </button>
@@ -481,7 +481,7 @@ function InputForm() {
                   </div>
                 </div>
 
-                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(26,45,122,0.06)]">
                   <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">企業・選考情報</p>
                   <div className="space-y-4">
                     <Field label="企業名" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="○○株式会社" />
@@ -514,7 +514,7 @@ function InputForm() {
                   </div>
                 </section>
 
-                <section className="overflow-hidden rounded-[1.75rem] border border-[var(--line)] bg-white shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                <section className="overflow-hidden rounded-[1.75rem] border border-[var(--line)] bg-white shadow-[0_8px_30px_rgba(26,45,122,0.06)]">
                   <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">企業研究メモ</p>
@@ -525,7 +525,7 @@ function InputForm() {
                         type="button"
                         onClick={handleResearch}
                         disabled={!formData.companyName || researching}
-                        className="rounded-full bg-[var(--gold)] px-4 py-2 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d] disabled:opacity-40"
+                        className="rounded-full bg-[var(--gold)] px-4 py-2 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff] disabled:opacity-40"
                       >
                         {researching ? "取得中..." : "AI自動取得"}
                       </button>
@@ -573,7 +573,7 @@ function InputForm() {
                   )}
                 </section>
 
-                <section className="overflow-hidden rounded-[1.75rem] border border-[var(--line)] bg-white shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                <section className="overflow-hidden rounded-[1.75rem] border border-[var(--line)] bg-white shadow-[0_8px_30px_rgba(26,45,122,0.06)]">
                   <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">この企業向けのカスタマイズ（任意）</p>
@@ -625,7 +625,7 @@ function InputForm() {
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="w-full rounded-full bg-[var(--navy)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#162c49] active:scale-[0.98] disabled:opacity-60"
+                  className="w-full rounded-full bg-[var(--navy)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#14246a] active:scale-[0.98] disabled:opacity-60"
                 >
                   {loading ? "AIが面接対策を生成中..." : "AIで面接対策を生成する"}
                 </button>

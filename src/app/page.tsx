@@ -163,11 +163,14 @@ export default function Home() {
       </div>
 
       {/* ── Header ───────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[rgba(10,25,47,0.80)] backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[rgba(26,45,122,0.80)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <div>
-            <p className="font-serif text-2xl tracking-[0.14em] text-white">就活Boost</p>
-            <p className="text-[10px] uppercase tracking-[0.45em] text-white/45">Interview Intelligence</p>
+          <div className="flex items-center gap-2.5">
+            <img src="/logo-icon.png" alt="ガクチカBoost" className="h-9 w-9 rounded-full" />
+            <div>
+              <p className="text-lg font-bold tracking-wide text-white">ガクチカBoost</p>
+              <p className="text-[10px] uppercase tracking-[0.4em] text-white/40">AI面接対策</p>
+            </div>
           </div>
           <nav className="hidden items-center gap-8 text-sm text-white/70 md:flex">
             <a href="#concept" className="transition hover:text-white">コンセプト</a>
@@ -178,7 +181,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <Link
               href="/input"
-              className="hidden rounded-full border border-[var(--gold)] bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d] md:inline-flex"
+              className="hidden rounded-full border border-[var(--gold)] bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff] md:inline-flex"
             >
               無料で始める
             </Link>
@@ -193,16 +196,20 @@ export default function Home() {
           className="absolute inset-0 bg-cover bg-center opacity-30"
           style={{
             backgroundImage:
-              "linear-gradient(90deg, rgba(7,18,35,0.92) 0%, rgba(7,18,35,0.75) 48%, rgba(7,18,35,0.52) 100%), url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80')",
+              "linear-gradient(90deg, rgba(20,36,100,0.92) 0%, rgba(20,36,100,0.75) 48%, rgba(20,36,100,0.52) 100%), url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80')",
           }}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(209,175,97,0.24),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(74,123,160,0.25),transparent_28%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(26,127,229,0.24),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(74,123,160,0.25),transparent_28%)]" />
 
         <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-28">
           <div className="max-w-3xl">
-            <p className="hero-1 mb-5 text-xs uppercase tracking-[0.45em] text-[var(--gold-soft)]">
-              AI面接対策ツール — 就活Boost
-            </p>
+            <div className="hero-1 mb-6 flex items-center gap-3">
+              <img src="/logo-icon.png" alt="ガクチカBoost" className="h-12 w-12 rounded-full" />
+              <div>
+                <p className="text-lg font-bold text-white">ガクチカBoost</p>
+                <p className="text-[10px] uppercase tracking-[0.4em] text-[var(--gold-soft)]">AI面接対策ツール</p>
+              </div>
+            </div>
             <h1 className="hero-2 max-w-4xl font-serif text-5xl leading-[1.05] tracking-[0.02em] text-white md:text-7xl">
               志望企業ごとの
               <br />
@@ -216,7 +223,7 @@ export default function Home() {
             <div className="hero-4 mt-10 flex flex-col gap-4 sm:flex-row">
               <Link
                 href="/input"
-                className="shimmer-btn rounded-full bg-[var(--gold)] px-8 py-4 text-center text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+                className="shimmer-btn rounded-full bg-[var(--gold)] px-8 py-4 text-center text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
               >
                 面接対策を始める
               </Link>
@@ -243,7 +250,7 @@ export default function Home() {
                   className="h-60 bg-cover bg-center"
                   style={{
                     backgroundImage:
-                      "linear-gradient(180deg, rgba(10,25,47,0.05), rgba(10,25,47,0.55)), url('https://images.unsplash.com/photo-1522202222206-b750486f3b95?auto=format&fit=crop&w=1200&q=80')",
+                      "linear-gradient(180deg, rgba(26,45,122,0.05), rgba(26,45,122,0.55)), url('https://images.unsplash.com/photo-1522202222206-b750486f3b95?auto=format&fit=crop&w=1200&q=80')",
                   }}
                 />
                 <div className="grid gap-6 p-6">
@@ -326,7 +333,7 @@ export default function Home() {
           <div className="grid gap-5 md:grid-cols-2">
             {featureCards.map((card, i) => (
               <AnimateIn key={card.title} delay={i * 80}>
-                <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-7 shadow-[0_24px_60px_rgba(10,25,47,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_rgba(10,25,47,0.14)]">
+                <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-7 shadow-[0_24px_60px_rgba(26,45,122,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_rgba(26,45,122,0.14)]">
                   <p className="text-xs uppercase tracking-[0.32em] text-[var(--accent)]">{card.label}</p>
                   <h3 className="mt-4 font-serif text-2xl leading-tight text-[var(--navy)]">{card.title}</h3>
                   <p className="mt-4 text-sm leading-7 text-[var(--ink-soft)]">{card.description}</p>
@@ -358,7 +365,7 @@ export default function Home() {
             {serviceHighlights.map((item, index) => (
               <AnimateIn key={item.id} delay={index * 80}>
                 <article
-                  className={`group grid overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--paper)] shadow-[0_32px_80px_rgba(10,25,47,0.08)] transition duration-300 hover:shadow-[0_40px_100px_rgba(10,25,47,0.14)] lg:grid-cols-2 ${
+                  className={`group grid overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--paper)] shadow-[0_32px_80px_rgba(26,45,122,0.08)] transition duration-300 hover:shadow-[0_40px_100px_rgba(26,45,122,0.14)] lg:grid-cols-2 ${
                     index % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
                   }`}
                 >
@@ -367,7 +374,7 @@ export default function Home() {
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                       style={{ backgroundImage: `url('${item.image}')` }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-[rgba(9,22,43,0.18)] to-[rgba(9,22,43,0.5)]" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[rgba(22,40,110,0.18)] to-[rgba(22,40,110,0.5)]" />
                   </div>
                   <div className="flex flex-col justify-center p-8 lg:p-12">
                     <p className="text-xs uppercase tracking-[0.35em] text-[var(--accent)]">
@@ -433,7 +440,7 @@ export default function Home() {
           <div className="grid gap-6 lg:grid-cols-3">
             {voices.map((voice, i) => (
               <AnimateIn key={voice.title} delay={i * 80}>
-                <article className="h-full rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-7 shadow-[0_20px_60px_rgba(10,25,47,0.07)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_80px_rgba(10,25,47,0.12)]">
+                <article className="h-full rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-7 shadow-[0_20px_60px_rgba(26,45,122,0.07)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_80px_rgba(26,45,122,0.12)]">
                   <p className="font-serif text-2xl leading-tight text-[var(--navy)]">{voice.title}</p>
                   <p className="mt-5 text-sm leading-8 text-[var(--ink-soft)]">{voice.body}</p>
                   <p className="mt-8 text-xs uppercase tracking-[0.28em] text-[var(--muted)]">{voice.meta}</p>
@@ -461,8 +468,8 @@ export default function Home() {
                 <div
                   className={`h-full rounded-[2rem] border p-8 transition duration-300 hover:-translate-y-1 ${
                     plan.featured
-                      ? "border-[var(--navy)] bg-[var(--navy)] text-white shadow-[0_28px_80px_rgba(10,25,47,0.24)] hover:shadow-[0_40px_100px_rgba(10,25,47,0.32)]"
-                      : "border-[var(--line)] bg-white text-[var(--ink)] hover:shadow-[0_28px_80px_rgba(10,25,47,0.12)]"
+                      ? "border-[var(--navy)] bg-[var(--navy)] text-white shadow-[0_28px_80px_rgba(26,45,122,0.24)] hover:shadow-[0_40px_100px_rgba(26,45,122,0.32)]"
+                      : "border-[var(--line)] bg-white text-[var(--ink)] hover:shadow-[0_28px_80px_rgba(26,45,122,0.12)]"
                   }`}
                 >
                   <p className={`text-xs uppercase tracking-[0.35em] ${plan.featured ? "text-[var(--gold-soft)]" : "text-[var(--accent)]"}`}>
@@ -485,7 +492,7 @@ export default function Home() {
                     href="/input"
                     className={`mt-8 inline-flex rounded-full px-6 py-3 text-sm font-semibold transition ${
                       plan.featured
-                        ? "bg-[var(--gold)] text-[var(--navy)] hover:bg-[#f8d58d]"
+                        ? "bg-[var(--gold)] text-[var(--navy)] hover:bg-[#50a8ff]"
                         : "border border-[var(--navy)] text-[var(--navy)] hover:bg-[var(--navy)] hover:text-white"
                     }`}
                   >
@@ -500,7 +507,7 @@ export default function Home() {
 
       {/* ── CTA ──────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-[var(--navy)] py-20 text-white lg:py-28">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(209,175,97,0.18),transparent_25%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_20%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(26,127,229,0.18),transparent_25%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_20%)]" />
         <AnimateIn className="relative mx-auto max-w-5xl px-5 text-center lg:px-8">
           <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">Start Your Preparation</p>
           <h2 className="mt-5 font-serif text-4xl leading-tight md:text-6xl">
@@ -514,7 +521,7 @@ export default function Home() {
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
             <Link
               href="/input"
-              className="shimmer-btn rounded-full bg-[var(--gold)] px-8 py-4 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+              className="shimmer-btn rounded-full bg-[var(--gold)] px-8 py-4 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
             >
               無料で始める
             </Link>
@@ -533,10 +540,9 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
           <div className="grid gap-10 md:grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr]">
             <div>
-              <p className="font-serif text-2xl text-[var(--navy)]">就活Boost</p>
-              <p className="mt-1 text-xs uppercase tracking-[0.35em] text-[var(--muted)]">AI Interview Platform</p>
+              <img src="/logo-full.png" alt="ガクチカBoost" className="h-10" />
               <p className="mt-5 max-w-xs text-sm leading-7 text-[var(--ink-soft)]">
-                就活生の経験を企業別の説得力に変換する、AIを活用した面接設計ツール。
+                プロフィールと企業情報を入力するだけで、志望理由・自己PR・逆質問をAIが生成します。
               </p>
             </div>
             <div>
@@ -569,7 +575,7 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-12 border-t border-[var(--line)] pt-6 text-center text-xs text-[var(--muted)]">
-            © 2026 就活Boost. Designed for focused interview preparation.
+            © 2026 ガクチカBoost. Designed for focused interview preparation.
           </div>
         </div>
       </footer>

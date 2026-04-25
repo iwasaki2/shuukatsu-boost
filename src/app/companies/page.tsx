@@ -99,15 +99,15 @@ export default function CompaniesPage() {
 
   return (
     <main className="min-h-screen bg-[var(--paper)]">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(10,25,47,0.82)] backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(26,45,122,0.82)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <button onClick={() => router.push("/")} className="text-left">
-            <p className="font-serif text-2xl tracking-[0.14em] text-white">就活Boost</p>
-            <p className="text-[10px] uppercase tracking-[0.45em] text-white/45">Selection Dashboard</p>
+          <button onClick={() => router.push("/")} className="flex items-center gap-2.5">
+            <img src="/logo-icon.png" alt="ガクチカBoost" className="h-8 w-8 rounded-full" />
+            <span className="text-base font-bold text-white">ガクチカBoost</span>
           </button>
           <button
             onClick={() => router.push("/input")}
-            className="rounded-full bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+            className="rounded-full bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
           >
             新しい企業を追加
           </button>
@@ -119,10 +119,10 @@ export default function CompaniesPage() {
           className="absolute inset-0 bg-cover bg-center opacity-25"
           style={{
             backgroundImage:
-              "linear-gradient(90deg, rgba(7,18,35,0.92), rgba(7,18,35,0.68)), url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80')",
+              "linear-gradient(90deg, rgba(20,36,100,0.92), rgba(20,36,100,0.68)), url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80')",
           }}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(209,175,97,0.24),transparent_25%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(26,127,229,0.24),transparent_25%)]" />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-18">
           <div>
             <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">Progress Overview</p>
@@ -172,7 +172,7 @@ export default function CompaniesPage() {
         {tab === "companies" ? (
           <div className="grid gap-8 xl:grid-cols-[1fr_320px]">
             <div className="space-y-8">
-              <div className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+              <div className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
                 <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
                   <div>
                     <p className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Selection Phase</p>
@@ -205,7 +205,7 @@ export default function CompaniesPage() {
                     </p>
                     <button
                       onClick={() => router.push("/input")}
-                      className="mt-8 rounded-full bg-[var(--gold)] px-7 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+                      className="mt-8 rounded-full bg-[var(--gold)] px-7 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
                     >
                       最初の企業を追加
                     </button>
@@ -219,7 +219,7 @@ export default function CompaniesPage() {
                       return (
                         <article
                           key={company.id}
-                          className="overflow-hidden rounded-[1.5rem] border border-[var(--line)] bg-white transition duration-200 hover:shadow-[0_12px_40px_rgba(10,25,47,0.09)]"
+                          className="overflow-hidden rounded-[1.5rem] border border-[var(--line)] bg-white transition duration-200 hover:shadow-[0_12px_40px_rgba(26,45,122,0.09)]"
                         >
                           {/* Main row */}
                           <div className="flex items-center gap-4 p-4 lg:p-5">
@@ -236,7 +236,7 @@ export default function CompaniesPage() {
                                   {company.interviewPhase}
                                 </span>
                                 {company.generatedContent && (
-                                  <span className="rounded-full bg-[rgba(10,25,47,0.06)] px-2.5 py-0.5 text-xs font-semibold text-[var(--ink-soft)]">
+                                  <span className="rounded-full bg-[rgba(26,45,122,0.06)] px-2.5 py-0.5 text-xs font-semibold text-[var(--ink-soft)]">
                                     対策済み
                                   </span>
                                 )}
@@ -251,7 +251,7 @@ export default function CompaniesPage() {
                                       title={phase}
                                       className={`h-2 w-2 rounded-full transition ${
                                         phase === company.interviewPhase
-                                          ? "bg-[var(--navy)] ring-2 ring-[rgba(10,25,47,0.18)] ring-offset-1"
+                                          ? "bg-[var(--navy)] ring-2 ring-[rgba(26,45,122,0.18)] ring-offset-1"
                                           : phaseIndex > i
                                           ? "bg-[var(--navy)]"
                                           : "bg-[var(--line)]"
@@ -270,7 +270,7 @@ export default function CompaniesPage() {
                             <div className="flex shrink-0 gap-2">
                               <button
                                 onClick={() => router.push(`/companies/${company.id}`)}
-                                className="rounded-full bg-[var(--navy)] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#162c49]"
+                                className="rounded-full bg-[var(--navy)] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#14246a]"
                               >
                                 詳細
                               </button>
@@ -308,7 +308,7 @@ export default function CompaniesPage() {
             </div>
 
             <aside className="space-y-6">
-              <div className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+              <div className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(26,45,122,0.06)]">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">面接対策のコツ</p>
                 <div className="mt-5 space-y-4">
                   {notes.map((note) => (
@@ -324,7 +324,7 @@ export default function CompaniesPage() {
                 <div className="mt-6 border-t border-[var(--line)] pt-6">
                   <button
                     onClick={() => router.push("/input")}
-                    className="w-full rounded-full bg-[var(--navy)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#162c49]"
+                    className="w-full rounded-full bg-[var(--navy)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#14246a]"
                   >
                     新しい企業を追加
                   </button>
@@ -334,12 +334,12 @@ export default function CompaniesPage() {
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+            <div className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
               <div
                 className="h-56 bg-cover bg-center"
                 style={{
                   backgroundImage:
-                    "linear-gradient(180deg, rgba(10,25,47,0.12), rgba(10,25,47,0.48)), url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80')",
+                    "linear-gradient(180deg, rgba(26,45,122,0.12), rgba(26,45,122,0.48)), url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80')",
                 }}
               />
               <div className="p-6">
@@ -352,7 +352,7 @@ export default function CompaniesPage() {
                     </p>
                     <button
                       onClick={() => router.push("/input")}
-                      className="mt-8 rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+                      className="mt-8 rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
                     >
                       自己情報を入力する
                     </button>
@@ -384,7 +384,7 @@ export default function CompaniesPage() {
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+            <div className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
               {profile ? (
                 <>
                   <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">

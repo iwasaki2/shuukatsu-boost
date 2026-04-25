@@ -15,9 +15,9 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "就活Boost | AI面接対策プラットフォーム",
+  title: "ガクチカBoost | AI面接対策ツール",
   description:
-    "就活生向けのAI面接対策プラットフォーム。企業ごとにパーソナライズされた志望理由、自己PR、逆質問を設計します。",
+    "プロフィールと企業情報を入力するだけで、志望理由・自己PR・逆質問など8種類の面接回答をAIが生成します。登録不要、2社まで無料。",
 };
 
 export default function RootLayout({

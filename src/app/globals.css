@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f2ea;
-  --foreground: #132238;
-  --paper: #f7f2ea;
-  --navy: #0c1c31;
-  --ink: #132238;
-  --ink-soft: #526173;
-  --muted: #7d8895;
-  --gold: #d1af61;
-  --gold-soft: #e8d3a0;
-  --accent: #7b8f77;
-  --sand: #efe3ca;
-  --line: rgba(19, 34, 56, 0.1);
+  --background: #f4f7fc;
+  --foreground: #0f1d3d;
+  --paper: #f4f7fc;
+  --navy: #1a2d7a;
+  --ink: #1a2240;
+  --ink-soft: #4a5780;
+  --muted: #7a88a8;
+  --gold: #1a7fe5;
+  --gold-soft: #6aaef7;
+  --accent: #4a6fa5;
+  --sand: #daeafb;
+  --line: rgba(26, 45, 122, 0.1);
 }
 
 @theme inline {
@@ -44,7 +44,7 @@ button {
 }
 
 ::selection {
-  background: rgba(209, 175, 97, 0.28);
+  background: rgba(26, 127, 229, 0.22);
 }
 
 /* ── Hero entrance animations ───────────────────────────── */

@@ -41,7 +41,7 @@ export function MobileNav() {
       </button>
 
       <div
-        className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-[1.5rem] border border-white/10 bg-[rgba(10,25,47,0.96)] shadow-[0_24px_60px_rgba(0,0,0,0.4)] backdrop-blur-xl"
+        className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-[1.5rem] border border-white/10 bg-[rgba(26,45,122,0.96)] shadow-[0_24px_60px_rgba(0,0,0,0.4)] backdrop-blur-xl"
         style={{
           opacity: open ? 1 : 0,
           transform: open ? "translateY(0)" : "translateY(-8px)",
@@ -65,7 +65,7 @@ export function MobileNav() {
           <Link
             href="/input"
             onClick={() => setOpen(false)}
-            className="block rounded-full bg-[var(--gold)] px-5 py-2.5 text-center text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d]"
+            className="block rounded-full bg-[var(--gold)] px-5 py-2.5 text-center text-sm font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
           >
             無料で始める
           </Link>

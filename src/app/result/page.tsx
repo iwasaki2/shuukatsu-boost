@@ -102,10 +102,10 @@ export default function ResultPage() {
 
   return (
     <main className="min-h-screen bg-[var(--paper)]">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(10,25,47,0.82)] backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(26,45,122,0.82)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           <button onClick={() => router.push("/")} className="text-left">
-            <p className="font-serif text-2xl tracking-[0.14em] text-white">就活Boost</p>
+            <p className="font-serif text-2xl tracking-[0.14em] text-white">ガクチカBoost</p>
             <p className="text-[10px] uppercase tracking-[0.45em] text-white/45">Generated Interview Plan</p>
           </button>
           <button
@@ -122,7 +122,7 @@ export default function ResultPage() {
           className="absolute inset-0 bg-cover bg-center opacity-22"
           style={{
             backgroundImage:
-              "linear-gradient(90deg, rgba(7,18,35,0.9), rgba(7,18,35,0.66)), url('https://images.unsplash.com/photo-1516321165247-4aa89a48be28?auto=format&fit=crop&w=1600&q=80')",
+              "linear-gradient(90deg, rgba(20,36,100,0.9), rgba(20,36,100,0.66)), url('https://images.unsplash.com/photo-1516321165247-4aa89a48be28?auto=format&fit=crop&w=1600&q=80')",
           }}
         />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
@@ -152,7 +152,7 @@ export default function ResultPage() {
       <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
         <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
           <div className="space-y-5">
-            <div className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+            <div className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
               <button
                 onClick={() => setShowBackground((prev) => !prev)}
                 className="flex w-full items-center justify-between px-6 py-5 text-left transition hover:bg-[var(--paper)]"
@@ -218,12 +218,12 @@ export default function ResultPage() {
           </div>
 
           <aside className="space-y-6">
-            <div className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
+            <div className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
               <div
                 className="h-52 bg-cover bg-center"
                 style={{
                   backgroundImage:
-                    "linear-gradient(180deg, rgba(10,25,47,0.14), rgba(10,25,47,0.46)), url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80')",
+                    "linear-gradient(180deg, rgba(26,45,122,0.14), rgba(26,45,122,0.46)), url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80')",
                 }}
               />
               <div className="p-6">
@@ -235,7 +235,7 @@ export default function ResultPage() {
                 <div className="mt-8 space-y-3">
                   <button
                     onClick={handleRegenerate}
-                    className="w-full rounded-full bg-[var(--navy)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#162c49]"
+                    className="w-full rounded-full bg-[var(--navy)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#14246a]"
                   >
                     {regenerating ? "再生成中..." : "もう一度生成する"}
                   </button>
@@ -281,7 +281,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(10,25,47,0.07)]">
+    <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(26,45,122,0.07)]">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-4">
         <h3 className="font-serif text-3xl text-[var(--navy)]">{label}</h3>
         <button
