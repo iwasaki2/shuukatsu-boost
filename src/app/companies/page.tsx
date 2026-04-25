@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import {
   getCompanies,
@@ -211,85 +211,123 @@ export default function CompaniesPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="mt-8 space-y-4">
-                    {companies.map((company) => (
-                      <article
-                        key={company.id}
-                        className="rounded-[1.75rem] border border-[var(--line)] bg-[var(--paper)] p-5 transition hover:shadow-[0_18px_50px_rgba(10,25,47,0.08)]"
-                      >
-                        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-3">
-                              <h3 className="font-serif text-3xl text-[var(--navy)]">{company.companyName}</h3>
-                              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${PHASE_STYLES[company.interviewPhase] ?? "bg-gray-100 text-gray-600 border border-gray-200"}`}>
-                                {company.interviewPhase}
-                              </span>
-                              {company.generatedContent && (
-                                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                                  面接対策あり
-                                </span>
-                              )}
+                  <div className="mt-6 space-y-3">
+                    {companies.map((company) => {
+                      const phaseIndex = PHASE_ORDER.indexOf(company.interviewPhase);
+                      const initial = company.companyName.replace(/株式会社|有限会社|合同会社/g, "").trim().charAt(0);
+                      const updatedDate = new Date(company.updatedAt).toLocaleDateString("ja-JP", { month: "short", day: "numeric" });
+                      return (
+                        <article
+                          key={company.id}
+                          className="overflow-hidden rounded-[1.5rem] border border-[var(--line)] bg-white transition duration-200 hover:shadow-[0_12px_40px_rgba(10,25,47,0.09)]"
+                        >
+                          {/* Main row */}
+                          <div className="flex items-center gap-4 p-4 lg:p-5">
+                            {/* Avatar */}
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--navy)] text-base font-bold text-[var(--gold-soft)]">
+                              {initial}
                             </div>
-                            <p className="mt-3 text-sm tracking-[0.2em] text-[var(--muted)] uppercase">{company.jobType}</p>
-                            <div className="mt-5 flex flex-wrap gap-2">
-                              {PHASE_ORDER.map((phase) => (
-                                <button
-                                  key={phase}
-                                  onClick={() => handlePhaseChange(company, phase)}
-                                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                                    company.interviewPhase === phase
-                                      ? PHASE_STYLES[phase]
-                                      : "border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:border-[var(--navy)] hover:text-[var(--navy)]"
-                                  }`}
-                                >
-                                  {phase}
-                                </button>
-                              ))}
+
+                            {/* Info */}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="font-semibold text-[var(--navy)]">{company.companyName}</h3>
+                                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${PHASE_STYLES[company.interviewPhase] ?? ""}`}>
+                                  {company.interviewPhase}
+                                </span>
+                                {company.generatedContent && (
+                                  <span className="rounded-full bg-[rgba(10,25,47,0.06)] px-2.5 py-0.5 text-xs font-semibold text-[var(--ink-soft)]">
+                                    対策済み
+                                  </span>
+                                )}
+                              </div>
+                              <p className="mt-0.5 text-xs text-[var(--muted)]">{company.jobType}</p>
+
+                              {/* Phase progress dots */}
+                              <div className="mt-2.5 flex items-center gap-1.5">
+                                {PHASE_ORDER.map((phase, i) => (
+                                  <Fragment key={phase}>
+                                    <div
+                                      title={phase}
+                                      className={`h-2 w-2 rounded-full transition ${
+                                        phase === company.interviewPhase
+                                          ? "bg-[var(--navy)] ring-2 ring-[rgba(10,25,47,0.18)] ring-offset-1"
+                                          : phaseIndex > i
+                                          ? "bg-[var(--navy)]"
+                                          : "bg-[var(--line)]"
+                                      }`}
+                                    />
+                                    {i < PHASE_ORDER.length - 1 && (
+                                      <div className={`h-px w-4 ${phaseIndex > i ? "bg-[var(--navy)]" : "bg-[var(--line)]"}`} />
+                                    )}
+                                  </Fragment>
+                                ))}
+                                <span className="ml-1.5 text-[11px] text-[var(--muted)]">{updatedDate}更新</span>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex shrink-0 gap-2">
+                              <button
+                                onClick={() => router.push(`/companies/${company.id}`)}
+                                className="rounded-full bg-[var(--navy)] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#162c49]"
+                              >
+                                詳細
+                              </button>
+                              <button
+                                onClick={() => handleDelete(company.id, company.companyName)}
+                                className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--muted)] transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                              >
+                                削除
+                              </button>
                             </div>
                           </div>
 
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => router.push(`/companies/${company.id}`)}
-                              className="rounded-full bg-[var(--navy)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#162c49]"
-                            >
-                              詳細を見る
-                            </button>
-                            <button
-                              onClick={() => handleDelete(company.id, company.companyName)}
-                              className="rounded-full border border-[var(--line)] px-5 py-2.5 text-sm font-semibold text-[var(--muted)] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                            >
-                              削除
-                            </button>
+                          {/* Phase change strip */}
+                          <div className="flex flex-wrap gap-1.5 border-t border-[var(--line)] bg-[var(--paper)] px-5 py-2.5">
+                            {PHASE_ORDER.map((phase) => (
+                              <button
+                                key={phase}
+                                onClick={() => handlePhaseChange(company, phase)}
+                                className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                                  company.interviewPhase === phase
+                                    ? PHASE_STYLES[phase]
+                                    : "text-[var(--muted)] hover:text-[var(--navy)]"
+                                }`}
+                              >
+                                {phase}
+                              </button>
+                            ))}
                           </div>
-                        </div>
-                      </article>
-                    ))}
+                        </article>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             </div>
 
             <aside className="space-y-6">
-              <div className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
-                <div
-                  className="h-44 bg-cover bg-center"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(180deg, rgba(10,25,47,0.18), rgba(10,25,47,0.52)), url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80')",
-                  }}
-                />
-                <div className="p-6">
-                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--accent)]">Interview Notes</p>
-                  <h3 className="mt-3 font-serif text-3xl text-[var(--navy)]">就活のヒント</h3>
-                  <div className="mt-6 space-y-5">
-                    {notes.map((note) => (
-                      <div key={note.title} className="border-t border-[var(--line)] pt-5 first:border-t-0 first:pt-0">
-                        <p className="font-semibold text-[var(--navy)]">{note.title}</p>
-                        <p className="mt-2 text-sm leading-7 text-[var(--ink-soft)]">{note.body}</p>
+              <div className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">面接対策のコツ</p>
+                <div className="mt-5 space-y-4">
+                  {notes.map((note) => (
+                    <div key={note.title} className="flex gap-3 border-t border-[var(--line)] pt-4 first:border-t-0 first:pt-0">
+                      <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--gold)]" style={{marginTop: "7px"}} />
+                      <div>
+                        <p className="text-sm font-semibold text-[var(--navy)]">{note.title}</p>
+                        <p className="mt-1 text-xs leading-5 text-[var(--ink-soft)]">{note.body}</p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 border-t border-[var(--line)] pt-6">
+                  <button
+                    onClick={() => router.push("/input")}
+                    className="w-full rounded-full bg-[var(--navy)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#162c49]"
+                  >
+                    新しい企業を追加
+                  </button>
                 </div>
               </div>
             </aside>

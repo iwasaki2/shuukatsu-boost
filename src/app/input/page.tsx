@@ -253,36 +253,76 @@ function InputForm() {
               <p className="mt-1 text-[10px] uppercase tracking-[0.45em] text-white/45">Interview Builder</p>
             </button>
 
-            <div className="mt-14">
-              <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">Structured Preparation</p>
-              <h1 className="mt-5 font-serif text-5xl leading-tight">
-                企業ごとの面接準備を、
-                <br />
-                気持ちではなく設計で進める。
-              </h1>
-              <p className="mt-6 max-w-xl text-sm leading-8 text-white/72">
-                自己分析、企業研究、逆質問の準備を一つの流れで入力し、企業に刺さる回答へ再構成します。
-              </p>
-            </div>
-
-            <div className="mt-10 grid gap-3">
-              {[
-                "プロフィールは自動保存され、次回以降も再利用",
-                "企業研究を足すほど志望理由と逆質問の精度が向上",
-                "1次から最終までフェーズ別に出し分け可能",
-              ].map((item) => (
-                <div key={item} className={infoPill}>
-                  {item}
+            {step === 1 ? (
+              <>
+                <div className="mt-14">
+                  <p className="text-[10px] uppercase tracking-[0.4em] text-white/40">Step 1 / 2</p>
+                  <h1 className="mt-4 font-serif text-5xl leading-tight">
+                    プロフィールを
+                    <br />
+                    登録します
+                  </h1>
+                  <p className="mt-6 text-sm leading-8 text-white/68">
+                    一度入力すると保存されます。次の企業でも同じ内容が引き継がれます。
+                  </p>
                 </div>
-              ))}
-            </div>
-
-            <blockquote className="mt-auto max-w-md border-l border-white/20 pl-5">
-              <p className="text-sm leading-8 text-white/72">
-                「企業ごとに話すべき強みが整理されて、面接直前の迷いがかなり減りました。」
-              </p>
-              <p className="mt-3 text-xs uppercase tracking-[0.28em] text-white/38">User Voice</p>
-            </blockquote>
+                <div className="mt-10">
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-white/38">このプロフィールから生成される項目</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {["志望理由", "自己PR", "強み・弱み", "キャリアプラン", "逆質問"].map((item) => (
+                      <span key={item} className="rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-xs text-white/70">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <blockquote className="mt-auto max-w-md border-l border-white/20 pl-5">
+                  <p className="text-sm leading-8 text-white/68">
+                    「企業ごとに話すべき強みが整理されて、面接直前の迷いがかなり減りました。」
+                  </p>
+                  <p className="mt-3 text-[10px] uppercase tracking-[0.28em] text-white/35">ユーザーの声</p>
+                </blockquote>
+              </>
+            ) : (
+              <>
+                <div className="mt-14">
+                  <p className="text-[10px] uppercase tracking-[0.4em] text-white/40">Step 2 / 2</p>
+                  <h1 className="mt-4 font-serif text-5xl leading-tight">
+                    企業情報を
+                    <br />
+                    入力します
+                  </h1>
+                  <p className="mt-6 text-sm leading-8 text-white/68">
+                    企業名を入れたら「AI補助調査」を試してください。採用概要を自動で取得します。
+                  </p>
+                </div>
+                <div className="mt-10 rounded-[1.5rem] border border-white/10 bg-white/6 p-5">
+                  <p className="text-xs font-semibold text-[var(--gold-soft)]">精度を上げるコツ</p>
+                  <ul className="mt-4 space-y-3 text-sm text-white/68">
+                    {[
+                      "企業理念は採用ページからコピーして貼る",
+                      "直近のニュースや新事業を1〜2件追加する",
+                      "志望理由メモに結びつけたい経験を書く",
+                    ].map((tip) => (
+                      <li key={tip} className="flex items-start gap-2.5">
+                        <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-[var(--gold-soft)]" />
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mt-auto">
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-white/38">入力後に生成される内容</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {["志望理由", "自己PR", "逆質問3件", "＋5種類"].map((item) => (
+                      <span key={item} className="rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-xs text-white/70">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </aside>
 
@@ -317,74 +357,63 @@ function InputForm() {
           )}
 
           <div className="mx-auto max-w-3xl px-5 py-8 lg:px-8 lg:py-10">
-            <div className="mb-8 flex gap-3">
-              {[
-                { n: 1, label: "自己情報" },
-                { n: 2, label: "企業情報" },
-              ].map((item) => (
-                <div key={item.n} className="flex-1">
-                  <div className={`h-1 rounded-full ${step >= item.n ? "bg-[var(--gold)]" : "bg-[var(--line)]"}`} />
-                  <div className="mt-3 flex items-center gap-3">
-                    <div
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                        step >= item.n ? "bg-[var(--navy)] text-white" : "bg-white text-[var(--muted)] border border-[var(--line)]"
-                      }`}
-                    >
-                      {step > item.n ? "✓" : item.n}
-                    </div>
-                    <span className={`text-sm font-semibold ${step >= item.n ? "text-[var(--navy)]" : "text-[var(--muted)]"}`}>
-                      {item.label}
-                    </span>
-                  </div>
+            <div className="mb-8 flex items-center">
+              <div className="flex items-center gap-2.5">
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition ${
+                  step > 1 ? "bg-[var(--gold)] text-[var(--navy)]" : "bg-[var(--navy)] text-white"
+                }`}>
+                  {step > 1 ? (
+                    <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+                      <path d="M1 4.5L4.5 8L11 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : "1"}
                 </div>
-              ))}
+                <span className="text-sm font-semibold text-[var(--navy)]">自己情報</span>
+              </div>
+              <div className={`mx-4 h-px w-10 rounded-full transition-colors duration-300 ${step > 1 ? "bg-[var(--gold)]" : "bg-[var(--line)]"}`} />
+              <div className="flex items-center gap-2.5">
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition ${
+                  step >= 2 ? "bg-[var(--navy)] text-white" : "border border-[var(--line)] bg-white text-[var(--muted)]"
+                }`}>
+                  2
+                </div>
+                <span className={`text-sm font-semibold transition ${step >= 2 ? "text-[var(--navy)]" : "text-[var(--muted)]"}`}>
+                  企業情報
+                </span>
+              </div>
             </div>
 
             {step === 1 ? (
-              <div className="space-y-6">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.35em] text-[var(--accent)]">Step 01</p>
-                  <h2 className="mt-4 font-serif text-4xl text-[var(--navy)]">あなた自身の土台を整理する</h2>
-                  <p className="mt-4 text-sm leading-8 text-[var(--ink-soft)]">
-                    ここで入力した内容が、今後すべての企業の面接対策に使われます。抽象論より、具体的な経験や癖を書いた方が強いです。
+              <div className="space-y-5">
+                <div className="pb-2">
+                  <h2 className="font-serif text-3xl text-[var(--navy)]">あなたのプロフィールを入力</h2>
+                  <p className="mt-2 text-sm text-[var(--muted)]">
+                    一度入力すると保存され、次の企業でも引き継がれます。
                   </p>
                 </div>
 
-                <section className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
-                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Basic Profile</p>
-                  <div className="mt-6 grid gap-5 md:grid-cols-2">
+                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                  <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">基本情報</p>
+                  <div className="grid gap-4 md:grid-cols-2">
                     <Field label="名前" name="name" value={formData.name} onChange={handleChange} placeholder="山田 太郎" />
                     <Field label="大学名" name="university" value={formData.university} onChange={handleChange} placeholder="○○大学" />
                   </div>
-                  <div className="mt-5">
+                  <div className="mt-4">
                     <Field label="学部・学科" name="faculty" value={formData.faculty} onChange={handleChange} placeholder="経済学部 経済学科" />
                   </div>
                 </section>
 
-                <section className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
-                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Background</p>
-                  <div className="mt-5">
+                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                  <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">自己分析</p>
+                  <div className="space-y-5">
                     <TextArea
-                      label="自己バックグラウンド"
-                      name="background"
-                      value={formData.background}
-                      onChange={handleChange}
-                      placeholder="育った環境、価値観の原点、部活、アルバイト、趣味、印象に残る出来事など"
-                      rows={5}
-                    />
-                  </div>
-                </section>
-
-                <section className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
-                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Core Narrative</p>
-                  <div className="mt-5 space-y-5">
-                    <TextArea
-                      label="学生時代に力を入れたこと"
+                      label="学生時代に力を入れたこと（ガクチカ）"
                       name="gakuchika"
                       value={formData.gakuchika}
                       onChange={handleChange}
                       placeholder="何に取り組み、何を考え、どんな工夫をして、どう成果につなげたか"
                       rows={5}
+                      helper="取り組み・工夫・成果の順で書くと、より具体的な志望理由が生成されます"
                     />
                     <TextArea
                       label="強み"
@@ -392,60 +421,69 @@ function InputForm() {
                       value={formData.strengths}
                       onChange={handleChange}
                       placeholder="行動の傾向、得意な進め方、周囲から言われることなど"
-                      rows={4}
+                      rows={3}
+                      helper="過去の経験から自覚したことや、周囲から指摘されることを書いてください"
                     />
                     <TextArea
                       label="弱み"
                       name="weaknesses"
                       value={formData.weaknesses}
                       onChange={handleChange}
-                      placeholder="正直に書くほど、面接での答え方に深みが出ます"
-                      rows={4}
+                      placeholder="苦手なこと、改善中のこと"
+                      rows={3}
+                      helper="正直に書くほど、面接での回答に説得力が出ます"
                     />
                     <TextArea
                       label="就活の軸"
                       name="jobAxis"
                       value={formData.jobAxis}
                       onChange={handleChange}
-                      placeholder="働く上で重視すること、やりたいこと、避けたいこと"
-                      rows={4}
+                      placeholder="仕事で重視したいこと、やりたいこと、避けたいこと"
+                      rows={3}
                     />
                   </div>
+                </section>
+
+                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                  <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">バックグラウンド（任意）</p>
+                  <TextArea
+                    label="自己バックグラウンド"
+                    name="background"
+                    value={formData.background}
+                    onChange={handleChange}
+                    placeholder="育った環境、価値観の原点、部活、アルバイト、印象に残る出来事など"
+                    rows={4}
+                    helper="任意項目ですが、書くと自己紹介や志望理由に個人らしさが出ます"
+                  />
                 </section>
 
                 {error && <ErrorBanner message={error} />}
 
                 <button
                   onClick={handleNext}
-                  className="w-full rounded-full bg-[var(--navy)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#162c49]"
+                  className="w-full rounded-full bg-[var(--navy)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#162c49] active:scale-[0.98]"
                 >
-                  企業情報の入力へ進む
+                  企業情報の入力へ進む →
                 </button>
               </div>
             ) : (
-              <div className="space-y-6">
-                <div className="flex items-start justify-between gap-4">
+              <div className="space-y-5">
+                <div className="flex items-center justify-between pb-2">
                   <div>
                     <button
-                      onClick={() => {
-                        setStep(1);
-                        setError("");
-                      }}
-                      className="text-sm font-semibold text-[var(--ink-soft)] transition hover:text-[var(--navy)]"
+                      onClick={() => { setStep(1); setError(""); }}
+                      className="flex items-center gap-1.5 text-sm font-semibold text-[var(--muted)] transition hover:text-[var(--navy)]"
                     >
-                      ← 自己情報へ戻る
+                      ← 戻る
                     </button>
-                    <p className="mt-4 text-xs uppercase tracking-[0.35em] text-[var(--accent)]">Step 02</p>
-                    <h2 className="mt-4 font-serif text-4xl text-[var(--navy)]">企業別の面接設計をつくる</h2>
-                    <p className="mt-4 text-sm leading-8 text-[var(--ink-soft)]">
-                      企業情報を足すほど、志望理由と逆質問の精度が上がります。必要なら企業ごとの強みの見せ方も変えられます。
-                    </p>
+                    <h2 className="mt-3 font-serif text-3xl text-[var(--navy)]">企業情報を入力</h2>
+                    <p className="mt-1.5 text-sm text-[var(--muted)]">情報を足すほど、生成される回答が具体的になります。</p>
                   </div>
                 </div>
 
-                <section className="rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
-                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Company Brief</p>
-                  <div className="mt-6 space-y-5">
+                <section className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                  <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">企業・選考情報</p>
+                  <div className="space-y-4">
                     <Field label="企業名" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="○○株式会社" />
                     <Field label="希望職種" name="jobType" value={formData.jobType} onChange={handleChange} placeholder="営業職、企画職、エンジニアなど" />
                     <div>
@@ -476,73 +514,75 @@ function InputForm() {
                   </div>
                 </section>
 
-                <section className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
-                  <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-5">
+                <section className="overflow-hidden rounded-[1.75rem] border border-[var(--line)] bg-white shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Research Layer</p>
-                      <h3 className="mt-3 font-serif text-3xl text-[var(--navy)]">企業研究情報</h3>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">企業研究メモ</p>
+                      <p className="mt-1 text-xs text-[var(--muted)]">入力するほど志望理由・逆質問が具体的になります</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={handleResearch}
                         disabled={!formData.companyName || researching}
-                        className="rounded-full bg-[var(--gold)] px-5 py-2 text-sm font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d] disabled:opacity-50"
+                        className="rounded-full bg-[var(--gold)] px-4 py-2 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#f8d58d] disabled:opacity-40"
                       >
-                        {researching ? "調査中..." : "AIで補助調査"}
+                        {researching ? "取得中..." : "AI自動取得"}
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowResearch((prev) => !prev)}
-                        className="rounded-full border border-[var(--line)] px-5 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                        className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
                       >
-                        {showResearch ? "閉じる" : "開く"}
+                        {showResearch ? "閉じる" : "手入力する"}
                       </button>
                     </div>
                   </div>
 
                   {showResearch && (
-                    <div className="border-t border-[var(--line)] bg-[var(--paper)] px-6 py-6">
-                      <div className="space-y-5">
+                    <div className="border-t border-[var(--line)] bg-[var(--paper)] px-6 py-5">
+                      <div className="space-y-4">
                         <TextArea
                           label="企業理念・ビジョン"
                           name="companyPhilosophy"
                           value={formData.companyPhilosophy}
                           onChange={handleChange}
-                          placeholder="採用ページや企業サイトの理念、価値観、ビジョン"
+                          placeholder="採用ページの理念・ミッション・価値観"
                           rows={4}
+                          helper="採用ページや企業サイトからコピーして貼り付けてください"
                         />
                         <TextArea
                           label="求める人材像"
                           name="desiredTalent"
                           value={formData.desiredTalent}
                           onChange={handleChange}
-                          placeholder="採用ページで明示されている人物像や期待される行動"
-                          rows={4}
+                          placeholder="採用ページで明示されている人物像"
+                          rows={3}
                         />
                         <TextArea
-                          label="ニュース・IR・気になった記事"
+                          label="ニュース・気になった情報"
                           name="articles"
                           value={formData.articles}
                           onChange={handleChange}
-                          placeholder="最近の新規事業、プロダクト、インタビュー、社長メッセージなど"
-                          rows={4}
+                          placeholder="直近の新規事業、プレスリリース、社長インタビューなど"
+                          rows={3}
+                          helper="1〜2件追加するだけで逆質問の内容が格段に良くなります"
                         />
                       </div>
                     </div>
                   )}
                 </section>
 
-                <section className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(10,25,47,0.08)]">
-                  <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-5">
+                <section className="overflow-hidden rounded-[1.75rem] border border-[var(--line)] bg-white shadow-[0_8px_30px_rgba(10,25,47,0.06)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.32em] text-[var(--muted)]">Customization</p>
-                      <h3 className="mt-3 font-serif text-3xl text-[var(--navy)]">この企業向けの調整</h3>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">この企業向けのカスタマイズ（任意）</p>
+                      <p className="mt-1 text-xs text-[var(--muted)]">他社と強みの見せ方を変えたい場合に使います</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setShowOverrides((prev) => !prev)}
-                      className="rounded-full border border-[var(--line)] px-5 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                      className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
                     >
                       {showOverrides ? "閉じる" : "開く"}
                     </button>
@@ -585,7 +625,7 @@ function InputForm() {
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="w-full rounded-full bg-[var(--navy)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#162c49] disabled:opacity-60"
+                  className="w-full rounded-full bg-[var(--navy)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#162c49] active:scale-[0.98] disabled:opacity-60"
                 >
                   {loading ? "AIが面接対策を生成中..." : "AIで面接対策を生成する"}
                 </button>
@@ -641,6 +681,7 @@ function TextArea({
   onChange,
   placeholder,
   rows,
+  helper,
 }: {
   label: string;
   name: string;
@@ -648,6 +689,7 @@ function TextArea({
   onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   placeholder?: string;
   rows?: number;
+  helper?: string;
 }) {
   return (
     <div>
@@ -660,6 +702,9 @@ function TextArea({
         rows={rows ?? 4}
         className="mt-2 w-full resize-none rounded-[1.25rem] border border-[var(--line)] bg-[var(--paper)] px-4 py-3 text-sm leading-7 text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--navy)] focus:outline-none"
       />
+      {helper && (
+        <p className="mt-1.5 text-xs leading-5 text-[var(--muted)]">{helper}</p>
+      )}
     </div>
   );
 }
