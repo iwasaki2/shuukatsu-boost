@@ -325,7 +325,7 @@ export default function Home() {
               <AnimateIn key={card.title} delay={i * 80}>
                 <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-7 shadow-[0_24px_60px_rgba(26,45,122,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_rgba(26,45,122,0.14)]">
                   <p className="text-xs uppercase tracking-[0.32em] text-[var(--accent)]">{card.label}</p>
-                  <h3 className="mt-4 font-serif text-2xl leading-tight text-[var(--navy)]">{card.title}</h3>
+                  <h3 className="mt-4 text-xl font-bold leading-tight text-[var(--navy)]">{card.title}</h3>
                   <p className="mt-4 text-sm leading-7 text-[var(--ink-soft)]">{card.description}</p>
                 </article>
               </AnimateIn>
@@ -500,7 +500,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(26,127,229,0.18),transparent_25%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_20%)]" />
         <AnimateIn className="relative mx-auto max-w-5xl px-5 text-center lg:px-8">
           <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">Start Your Preparation</p>
-          <h2 className="mt-5 font-serif text-4xl leading-tight md:text-6xl">
+          <h2 className="mt-5 text-4xl font-bold leading-tight md:text-6xl">
             まず2社分、
             <br />
             無料で試してみてください。
