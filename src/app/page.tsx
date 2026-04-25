@@ -200,7 +200,7 @@ export default function Home() {
             <p className="hero-1 mb-5 text-xs uppercase tracking-[0.45em] text-[var(--gold-soft)]">
               AI面接対策ツール
             </p>
-            <h1 className="hero-2 max-w-4xl font-serif text-5xl leading-[1.05] tracking-[0.02em] text-white md:text-7xl">
+            <h1 className="hero-2 max-w-4xl text-5xl font-bold leading-[1.1] text-white md:text-7xl">
               志望企業ごとの
               <br />
               面接回答を、
