@@ -10,16 +10,13 @@ interface AnimateInProps {
 
 export function AnimateIn({ children, className = "", delay = 0 }: AnimateInProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(
+    () => typeof IntersectionObserver === "undefined"
+  );
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-
-    if (typeof IntersectionObserver === "undefined") {
-      setVisible(true);
-      return;
-    }
+    if (!el || typeof IntersectionObserver === "undefined") return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {

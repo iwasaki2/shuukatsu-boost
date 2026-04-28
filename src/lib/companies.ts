@@ -1,4 +1,5 @@
-import { getCurrentUserId } from "./auth";
+// Company types and constants used across client and server code.
+// Data operations are now handled via /api/companies/* API routes.
 
 export interface ReverseQuestion {
   opinion: string;
@@ -34,40 +35,6 @@ export interface CompanyRecord {
   esContent?: EsContent | null;
   createdAt: string;
   updatedAt: string;
-}
-
-function storageKey(base: string): string {
-  const uid = getCurrentUserId();
-  return uid ? `gkb_${uid}_${base}` : base;
-}
-
-const BASE_KEY = "naiteiNaviCompanies";
-
-export function getCompanies(): CompanyRecord[] {
-  if (typeof window === "undefined") return [];
-  const stored = localStorage.getItem(storageKey(BASE_KEY));
-  return stored ? JSON.parse(stored) : [];
-}
-
-export function getCompany(id: string): CompanyRecord | null {
-  return getCompanies().find((c) => c.id === id) ?? null;
-}
-
-export function saveCompany(company: CompanyRecord): void {
-  const companies = getCompanies();
-  const index = companies.findIndex((c) => c.id === company.id);
-  const updated = { ...company, updatedAt: new Date().toISOString() };
-  if (index >= 0) {
-    companies[index] = updated;
-  } else {
-    companies.unshift(updated);
-  }
-  localStorage.setItem(storageKey(BASE_KEY), JSON.stringify(companies));
-}
-
-export function deleteCompany(id: string): void {
-  const companies = getCompanies().filter((c) => c.id !== id);
-  localStorage.setItem(storageKey(BASE_KEY), JSON.stringify(companies));
 }
 
 export const PHASE_STYLES: Record<string, string> = {

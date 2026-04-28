@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { login, register } from "@/lib/auth";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from") ?? "/companies";
+
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,32 +23,38 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    if (mode === "login") {
-      const user = login(email, password);
-      if (!user) {
-        setError("メールアドレスまたはパスワードが正しくありません");
-        setLoading(false);
-        return;
-      }
-    } else {
-      if (!name.trim()) { setError("名前を入力してください"); setLoading(false); return; }
-      if (password.length < 6) { setError("パスワードは6文字以上にしてください"); setLoading(false); return; }
-      const user = register(email, password, name);
-      if (!user) {
-        setError("このメールアドレスはすでに登録されています");
-        setLoading(false);
-        return;
-      }
-    }
+    const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
+    const body = mode === "login"
+      ? { email, password }
+      : { email, password, name };
 
-    router.push("/companies");
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "エラーが発生しました");
+        return;
+      }
+
+      router.push(from);
+      router.refresh();
+    } catch {
+      setError("ネットワークエラーが発生しました");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[var(--paper)] px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <img src="/logo-icon.png" alt="ガクチカBoost" className="mx-auto mb-4 h-16 w-16 rounded-full" />
+          <Image src="/logo-icon.png" alt="ガクチカBoost" width={64} height={64} className="mx-auto mb-4 rounded-full" />
           <h1 className="text-2xl font-bold text-[var(--navy)]">ガクチカBoost</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">AI面接対策ツール</p>
         </div>
@@ -131,11 +142,19 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-xs text-[var(--muted)]">
           登録不要でお試しの場合は{" "}
-          <a href="/companies" className="font-semibold text-[var(--navy)] underline-offset-2 hover:underline">
+          <Link href="/companies" className="font-semibold text-[var(--navy)] underline-offset-2 hover:underline">
             ゲストとして続ける
-          </a>
+          </Link>
         </p>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

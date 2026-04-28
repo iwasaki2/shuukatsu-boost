@@ -47,7 +47,7 @@ export const PLANS: Plan[] = [
     description: "就活を本格的に進めたい方に",
     features: [
       "企業数無制限",
-      "面接回答を自動生成",
+      "面接回答を自動生成（高品質モデル）",
       "ES・書類対策（自己PR・アピールポイント・志望理由）",
       "暗記モードで練習",
       "1次〜最終面接すべて対応",
@@ -71,6 +71,7 @@ export const PLANS: Plan[] = [
     description: "最終面接まで万全の準備を",
     features: [
       "Growthのすべての機能",
+      "最高品質AIモデルで生成",
       "最終面接特化の深掘り生成",
       "競合他社との比較軸を生成",
       "回答の複数バリエーション生成",
@@ -89,34 +90,4 @@ export const PLANS: Plan[] = [
 
 export function getPlan(id: PlanId): Plan {
   return PLANS.find((p) => p.id === id) ?? PLANS[0];
-}
-
-// ─── localStorage でプランを管理 ──────────────────────────────
-const PLAN_KEY = "gkb_plan";
-
-export function getCurrentPlan(): PlanId {
-  if (typeof window === "undefined") return "starter";
-  const { getCurrentUserId } = require("./auth");
-  const uid = getCurrentUserId();
-  if (!uid) return "starter";
-  const stored = localStorage.getItem(`${PLAN_KEY}_${uid}`);
-  return (stored as PlanId) ?? "starter";
-}
-
-export function setCurrentPlan(plan: PlanId): void {
-  if (typeof window === "undefined") return;
-  const { getCurrentUserId } = require("./auth");
-  const uid = getCurrentUserId();
-  if (!uid) return;
-  localStorage.setItem(`${PLAN_KEY}_${uid}`, plan);
-}
-
-export function canUseFeature(feature: keyof Plan["limits"]): boolean {
-  const plan = getPlan(getCurrentPlan());
-  const val = plan.limits[feature];
-  return typeof val === "boolean" ? val : true;
-}
-
-export function getCompanyLimit(): number {
-  return getPlan(getCurrentPlan()).limits.maxCompanies;
 }

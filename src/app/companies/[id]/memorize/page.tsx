@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getCompany } from "@/lib/companies";
+import type { GeneratedContent } from "@/lib/companies";
 
 interface Card {
   question: string;
@@ -10,7 +10,7 @@ interface Card {
   label: string;
 }
 
-function buildCards(content: NonNullable<ReturnType<typeof getCompany>>["generatedContent"]): Card[] {
+function buildCards(content: GeneratedContent | null): Card[] {
   if (!content) return [];
   const cards: Card[] = [
     { label: "自己紹介", question: "1分間で自己紹介をお願いします", answer: content.selfIntro },
@@ -35,18 +35,26 @@ export default function MemorizePage() {
   const [cards, setCards] = useState<Card[]>([]);
   const [companyName, setCompanyName] = useState("");
   const [index, setIndex] = useState(0);
-  const [flipped, setFlipped] = useState(false);
   const [results, setResults] = useState<Record<number, "ok" | "ng">>({});
   const [done, setDone] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
 
   useEffect(() => {
-    const company = getCompany(id);
-    if (!company) { router.push("/companies"); return; }
-    setCompanyName(company.companyName);
-    const built = buildCards(company.generatedContent);
-    if (built.length === 0) { router.push(`/companies/${id}`); return; }
-    setCards(built);
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/companies/${id}`);
+        if (!res.ok) { router.push("/companies"); return; }
+        const { company } = await res.json();
+        if (!company) { router.push("/companies"); return; }
+        setCompanyName(company.companyName);
+        const built = buildCards(company.generatedContent);
+        if (built.length === 0) { router.push(`/companies/${id}`); return; }
+        setCards(built);
+      } catch {
+        router.push("/companies");
+      }
+    };
+    load();
   }, [id, router]);
 
   const current = cards[index];
@@ -56,7 +64,6 @@ export default function MemorizePage() {
   const handleResult = (result: "ok" | "ng") => {
     const next = { ...results, [index]: result };
     setResults(next);
-    setFlipped(false);
     setShowAnswer(false);
 
     if (index + 1 >= cards.length) {
@@ -68,7 +75,6 @@ export default function MemorizePage() {
 
   const restart = () => {
     setIndex(0);
-    setFlipped(false);
     setResults({});
     setDone(false);
     setShowAnswer(false);
@@ -81,7 +87,6 @@ export default function MemorizePage() {
     const ngCards = ngIndices.map((i) => cards[i]);
     setCards(ngCards);
     setIndex(0);
-    setFlipped(false);
     setResults({});
     setDone(false);
     setShowAnswer(false);
@@ -110,7 +115,6 @@ export default function MemorizePage() {
       </header>
 
       {done ? (
-        /* ── 完了画面 ── */
         <div className="mx-auto max-w-lg px-4 py-16 text-center">
           <div className="rounded-[2rem] border border-[var(--line)] bg-white p-10 shadow-[0_16px_48px_rgba(26,45,122,0.10)]">
             <p className="text-5xl font-bold text-[var(--navy)]">
@@ -149,7 +153,6 @@ export default function MemorizePage() {
         </div>
       ) : (
         <div className="mx-auto max-w-lg px-4 py-8">
-          {/* 進捗バー */}
           <div className="mb-6">
             <div className="mb-2 flex items-center justify-between text-xs text-[var(--muted)]">
               <span>{current?.label}</span>
@@ -163,7 +166,6 @@ export default function MemorizePage() {
             </div>
           </div>
 
-          {/* カード */}
           <div
             className="cursor-pointer rounded-[2rem] border border-[var(--line)] bg-white shadow-[0_16px_48px_rgba(26,45,122,0.10)] transition-all duration-200 hover:shadow-[0_24px_60px_rgba(26,45,122,0.15)]"
             style={{ minHeight: "320px" }}
@@ -179,7 +181,6 @@ export default function MemorizePage() {
                 )}
               </div>
 
-              {/* 質問 */}
               <div className="mt-6">
                 <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">質問</p>
                 <p className="mt-3 text-xl font-bold leading-tight text-[var(--navy)]">
@@ -187,7 +188,6 @@ export default function MemorizePage() {
                 </p>
               </div>
 
-              {/* 回答（クリックで表示） */}
               {showAnswer && (
                 <div className="mt-6 border-t border-[var(--line)] pt-6">
                   <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">回答</p>
@@ -199,7 +199,6 @@ export default function MemorizePage() {
             </div>
           </div>
 
-          {/* 判定ボタン */}
           <div className="mt-6 grid grid-cols-2 gap-4">
             <button
               onClick={() => handleResult("ng")}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { AnimateIn } from "@/components/AnimateIn";
 import { MobileNav } from "@/components/MobileNav";
 import { UserMenu } from "@/components/UserMenu";
@@ -166,7 +167,7 @@ export default function Home() {
       {/* ── Header ───────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[rgba(26,45,122,0.80)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <img src="/logo-icon.png" alt="ガクチカBoost" className="h-10 w-10 rounded-full" />
+          <Image src="/logo-icon.png" alt="ガクチカBoost" width={40} height={40} className="h-10 w-10 rounded-full" />
           <nav className="hidden items-center gap-8 text-sm text-white/70 md:flex">
             <a href="#concept" className="transition hover:text-white">コンセプト</a>
             <a href="#service" className="transition hover:text-white">機能</a>
@@ -532,7 +533,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
           <div className="grid gap-10 md:grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr]">
             <div>
-              <img src="/logo-full.png" alt="ガクチカBoost" className="h-10" />
+              <Image src="/logo-full.png" alt="ガクチカBoost" width={120} height={40} className="h-10 w-auto" />
               <p className="mt-5 max-w-xs text-sm leading-7 text-[var(--ink-soft)]">
                 プロフィールと企業情報を入力するだけで、志望理由・自己PR・逆質問をAIが生成します。
               </p>

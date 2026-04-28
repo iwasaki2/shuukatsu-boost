@@ -1,9 +1,8 @@
 "use client";
 
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getCompany, saveCompany, getCompanies, type CompanyRecord } from "@/lib/companies";
-import { getCompanyLimit, getCurrentPlan } from "@/lib/plans";
+import Image from "next/image";
 
 interface FormData {
   name: string;
@@ -25,19 +24,6 @@ interface FormData {
   motivationMemo: string;
 }
 
-type ProfileData = Pick<
-  FormData,
-  "name" | "university" | "faculty" | "background" | "gakuchika" | "strengths" | "weaknesses" | "jobAxis"
->;
-
-type ExtendedCompanyRecord = CompanyRecord & {
-  strengthsOverride?: string;
-  weaknessesOverride?: string;
-  motivationMemo?: string;
-};
-
-const PROFILE_KEY = "naiteiNaviProfile";
-
 const INITIAL_FORM: FormData = {
   name: "",
   university: "",
@@ -58,55 +44,95 @@ const INITIAL_FORM: FormData = {
   motivationMemo: "",
 };
 
-function getStoredProfile(): ProfileData | null {
-  if (typeof window === "undefined") return null;
-  const saved = localStorage.getItem(PROFILE_KEY);
-  return saved ? (JSON.parse(saved) as ProfileData) : null;
-}
-
-function getPrefilledForm(editId: string | null): FormData {
-  const profile = getStoredProfile();
-  const base = { ...INITIAL_FORM, ...(profile ?? {}) };
-
-  if (!editId) return base;
-
-  const company = getCompany(editId) as ExtendedCompanyRecord | null;
-  if (!company) return base;
-
-  return {
-    ...base,
-    companyName: company.companyName,
-    jobType: company.jobType,
-    interviewPhase: company.interviewPhase,
-    companyPhilosophy: company.companyPhilosophy,
-    desiredTalent: company.desiredTalent,
-    articles: company.articles,
-    strengthsOverride: company.strengthsOverride ?? "",
-    weaknessesOverride: company.weaknessesOverride ?? "",
-    motivationMemo: company.motivationMemo ?? "",
-  };
-}
-
 function InputForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
-  const hasStoredProfile = !!getStoredProfile();
-  const initialStep = editId || (searchParams.get("step") === "2" && hasStoredProfile) ? 2 : 1;
 
-  const [step, setStep] = useState(initialStep);
+  const [step, setStep] = useState(editId ? 2 : 1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState<FormData>(() => getPrefilledForm(editId));
-  const [profileLoaded, setProfileLoaded] = useState(hasStoredProfile);
+  const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
-  const [showResearch, setShowResearch] = useState(
-    !!editId || !!formData.companyPhilosophy || !!formData.desiredTalent || !!formData.articles
-  );
-  const [showOverrides, setShowOverrides] = useState(
-    !!formData.strengthsOverride || !!formData.weaknessesOverride || !!formData.motivationMemo
-  );
+  const [showResearch, setShowResearch] = useState(false);
+  const [showOverrides, setShowOverrides] = useState(false);
   const [researching, setResearching] = useState(false);
+  const [companyCount, setCompanyCount] = useState(0);
+  const [planData, setPlanData] = useState<{ planId: string; limit: number }>({ planId: "starter", limit: 2 });
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const [profileRes, planRes, companiesRes] = await Promise.all([
+          fetch("/api/profile"),
+          fetch("/api/plan"),
+          fetch("/api/companies"),
+        ]);
+
+        const profileData = await profileRes.json();
+        const planInfo = await planRes.json();
+        const companiesData = await companiesRes.json();
+
+        const planId = planInfo.planId ?? "starter";
+        const limit = planId === "starter" ? 2 : Infinity;
+        setPlanData({ planId, limit });
+        setCompanyCount(companiesData.companies?.length ?? 0);
+
+        if (profileData.profile) {
+          const p = profileData.profile;
+          setFormData((prev) => ({
+            ...prev,
+            name: p.displayName ?? "",
+            university: p.university ?? "",
+            faculty: p.faculty ?? "",
+            background: p.background ?? "",
+            gakuchika: p.gakuchika ?? "",
+            strengths: p.strengths ?? "",
+            weaknesses: p.weaknesses ?? "",
+            jobAxis: p.jobAxis ?? "",
+          }));
+          setProfileLoaded(true);
+        } else {
+          const saved = typeof window !== "undefined" ? localStorage.getItem("naiteiNaviProfile") : null;
+          if (saved) {
+            const p = JSON.parse(saved);
+            setFormData((prev) => ({ ...prev, ...p }));
+            setProfileLoaded(true);
+          }
+        }
+
+        if (editId) {
+          const compRes = await fetch(`/api/companies/${editId}`);
+          if (compRes.ok) {
+            const { company } = await compRes.json();
+            setFormData((prev) => ({
+              ...prev,
+              companyName: company.companyName ?? "",
+              jobType: company.jobType ?? "",
+              interviewPhase: company.interviewPhase ?? "1次面接",
+              companyPhilosophy: company.companyPhilosophy ?? "",
+              desiredTalent: company.desiredTalent ?? "",
+              articles: company.articles ?? "",
+              strengthsOverride: company.strengthsOverride ?? "",
+              weaknessesOverride: company.weaknessesOverride ?? "",
+              motivationMemo: company.motivationMemo ?? "",
+            }));
+            setShowResearch(
+              !!(company.companyPhilosophy || company.desiredTalent || company.articles)
+            );
+            setShowOverrides(
+              !!(company.strengthsOverride || company.weaknessesOverride || company.motivationMemo)
+            );
+          }
+        }
+      } catch {
+        // Silent fail — form remains with defaults
+      }
+    };
+
+    loadInitialData();
+  }, [editId]);
 
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -116,18 +142,35 @@ function InputForm() {
     []
   );
 
-  const saveProfile = (data: FormData) => {
-    const profile: ProfileData = {
-      name: data.name,
-      university: data.university,
-      faculty: data.faculty,
-      background: data.background,
-      gakuchika: data.gakuchika,
-      strengths: data.strengths,
-      weaknesses: data.weaknesses,
-      jobAxis: data.jobAxis,
-    };
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  const saveProfile = async (data: FormData) => {
+    try {
+      await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          university: data.university,
+          faculty: data.faculty,
+          background: data.background,
+          gakuchika: data.gakuchika,
+          strengths: data.strengths,
+          weaknesses: data.weaknesses,
+          jobAxis: data.jobAxis,
+        }),
+      });
+      localStorage.setItem("naiteiNaviProfile", JSON.stringify({
+        name: data.name,
+        university: data.university,
+        faculty: data.faculty,
+        background: data.background,
+        gakuchika: data.gakuchika,
+        strengths: data.strengths,
+        weaknesses: data.weaknesses,
+        jobAxis: data.jobAxis,
+      }));
+    } catch {
+      // Fall through to localStorage only
+    }
     setProfileLoaded(true);
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 2500);
@@ -152,14 +195,14 @@ function InputForm() {
         articles: data.articles ?? prev.articles,
       }));
     } catch {
-      // Ignore research fetch failures and leave manual entry available.
+      // Ignore research failures
     } finally {
       setResearching(false);
     }
   };
 
   const clearProfile = () => {
-    localStorage.removeItem(PROFILE_KEY);
+    localStorage.removeItem("naiteiNaviProfile");
     setFormData((prev) => ({
       ...prev,
       name: "",
@@ -174,14 +217,14 @@ function InputForm() {
     setProfileLoaded(false);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const { name, university, faculty, gakuchika, strengths, weaknesses, jobAxis } = formData;
     if (!name || !university || !faculty || !gakuchika || !strengths || !weaknesses || !jobAxis) {
       setError("必須項目を入力してください。");
       return;
     }
 
-    saveProfile(formData);
+    await saveProfile(formData);
     setError("");
     setStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -193,58 +236,80 @@ function InputForm() {
       return;
     }
 
-    // プラン上限チェック（新規追加時のみ）
-    if (!editId) {
-      const limit = getCompanyLimit();
-      const existing = getCompanies().length;
-      if (existing >= limit) {
-        setError(`Starter プランでは${limit}社までです。Growth プラン（¥980/月）にアップグレードすると無制限になります。`);
-        return;
-      }
+    if (!editId && planData.limit !== Infinity && companyCount >= planData.limit) {
+      setError(`Starter プランでは${planData.limit}社までです。Growth プラン（¥980/月）にアップグレードすると無制限になります。`);
+      return;
     }
 
     setError("");
     setLoading(true);
 
     try {
-      const response = await fetch("/api/generate", {
+      const generateRes = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Generation failed");
+      if (!generateRes.ok) throw new Error("Generation failed");
 
-      const generatedContent = await response.json();
-      const now = new Date().toISOString();
-      const companyId = editId ?? Date.now().toString();
-      const existing = editId ? (getCompany(editId) as ExtendedCompanyRecord | null) : null;
+      const generatedContent = await generateRes.json();
 
-      const record: ExtendedCompanyRecord = {
-        id: companyId,
-        companyName: formData.companyName,
-        jobType: formData.jobType,
-        interviewPhase: formData.interviewPhase,
-        companyPhilosophy: formData.companyPhilosophy,
-        desiredTalent: formData.desiredTalent,
-        articles: formData.articles,
-        strengthsOverride: formData.strengthsOverride,
-        weaknessesOverride: formData.weaknessesOverride,
-        motivationMemo: formData.motivationMemo,
-        generatedContent,
-        createdAt: existing?.createdAt ?? now,
-        updatedAt: now,
-      };
+      let companyId: string;
 
-      saveCompany(record);
+      if (editId) {
+        await fetch(`/api/companies/${editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companyName: formData.companyName,
+            jobType: formData.jobType,
+            interviewPhase: formData.interviewPhase,
+            companyPhilosophy: formData.companyPhilosophy,
+            desiredTalent: formData.desiredTalent,
+            articles: formData.articles,
+            strengthsOverride: formData.strengthsOverride,
+            weaknessesOverride: formData.weaknessesOverride,
+            motivationMemo: formData.motivationMemo,
+            generatedContent,
+          }),
+        });
+        companyId = editId;
+      } else {
+        const saveRes = await fetch("/api/companies", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companyName: formData.companyName,
+            jobType: formData.jobType,
+            interviewPhase: formData.interviewPhase,
+            companyPhilosophy: formData.companyPhilosophy,
+            desiredTalent: formData.desiredTalent,
+            articles: formData.articles,
+            strengthsOverride: formData.strengthsOverride,
+            weaknessesOverride: formData.weaknessesOverride,
+            motivationMemo: formData.motivationMemo,
+            generatedContent,
+          }),
+        });
+
+        if (!saveRes.ok) {
+          const errData = await saveRes.json();
+          setError(errData.error ?? "保存に失敗しました");
+          setLoading(false);
+          return;
+        }
+
+        const { company } = await saveRes.json();
+        companyId = company.id;
+      }
+
       router.push(`/companies/${companyId}`);
     } catch {
       setError("生成に失敗しました。もう一度お試しください。");
       setLoading(false);
     }
   };
-
-  const infoPill = "rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm text-white/78";
 
   return (
     <main className="min-h-screen bg-[var(--paper)]">
@@ -260,7 +325,7 @@ function InputForm() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(26,127,229,0.2),transparent_24%)]" />
           <div className="relative flex h-full flex-col px-10 py-12 xl:px-14">
             <button onClick={() => router.push("/")}>
-              <img src="/logo-icon.png" alt="ガクチカBoost" className="h-10 w-10 rounded-full" />
+              <Image src="/logo-icon.png" alt="ガクチカBoost" width={40} height={40} className="h-10 w-10 rounded-full" />
             </button>
 
             {step === 1 ? (

@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String
+  name             String
+  stripeCustomerId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  plan             UserPlan?
+  companies        Company[]
+  profile          Profile?
+}
+
+model UserPlan {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  planId               String    @default("starter")
+  stripeSubscriptionId String?
+  status               String    @default("active")
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  displayName String   @default("")
+  university  String   @default("")
+  faculty     String   @default("")
+  background  String   @default("")
+  gakuchika   String   @default("")
+  strengths   String   @default("")
+  weaknesses  String   @default("")
+  jobAxis     String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Company {
+  id                 String    @id @default(cuid())
+  userId             String
+  companyName        String
+  jobType            String
+  interviewPhase     String    @default("1次面接")
+  companyPhilosophy  String    @default("")
+  desiredTalent      String    @default("")
+  articles           String    @default("")
+  strengthsOverride  String?
+  weaknessesOverride String?
+  motivationMemo     String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generatedContent   GeneratedContent?
+  esContent          EsContent?
+}
+
+model GeneratedContent {
+  id                     String   @id @default(cuid())
+  companyId              String   @unique
+  selfIntro              String   @default("")
+  motivation             String   @default("")
+  jobAxis                String   @default("")
+  strengths              String   @default("")
+  weaknesses             String   @default("")
+  careerPlan             String   @default("")
+  reverseQuestions       String   @default("[]")
+  closingStatement       String   @default("")
+  finalInterviewDeepDive String   @default("")
+  competitorComparison   String   @default("")
+  variations             String   @default("{}")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  company                Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model EsContent {
+  id             String   @id @default(cuid())
+  companyId      String   @unique
+  esSelfPR       String   @default("")
+  esAppealPoints String   @default("")
+  esMotivation   String   @default("")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}

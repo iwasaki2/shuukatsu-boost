@@ -1,65 +1,94 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  getCompany,
-  saveCompany,
-  type CompanyRecord,
-  type GeneratedContent,
-  type EsContent,
-  type ReverseQuestion,
-  PHASE_ORDER,
-  PHASE_STYLES,
-} from "@/lib/companies";
-import { canUseFeature } from "@/lib/plans";
 import Link from "next/link";
+import type { CompanyRecord, GeneratedContent, EsContent, ReverseQuestion } from "@/lib/companies";
+import { PHASE_ORDER, PHASE_STYLES } from "@/lib/companies";
+import type { PlanId } from "@/lib/plans";
 
-const PROFILE_KEY = "naiteiNaviProfile";
+type ExtendedGeneratedContent = GeneratedContent & {
+  finalInterviewDeepDive?: string;
+  competitorComparison?: string;
+  variations?: Record<string, string[]>;
+};
 
-type ExtendedCompanyRecord = CompanyRecord & {
+type ExtendedCompanyRecord = Omit<CompanyRecord, "generatedContent"> & {
   strengthsOverride?: string;
   weaknessesOverride?: string;
   motivationMemo?: string;
+  generatedContent: ExtendedGeneratedContent | null;
 };
 
-function getInitialCompany(id: string): ExtendedCompanyRecord | null {
-  return getCompany(id) as ExtendedCompanyRecord | null;
-}
+const researchFields = [
+  { key: "companyPhilosophy" as const, label: "企業理念・ビジョン", placeholder: "採用ページやコーポレートサイトのビジョンをメモ" },
+  { key: "desiredTalent" as const, label: "求める人材像", placeholder: "採用ページの人物像や期待される行動を整理" },
+  { key: "articles" as const, label: "ニュース・IR・印象に残った情報", placeholder: "直近のニュース、事業トピック、競合比較など" },
+] as const;
 
 export default function CompanyDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
-  const [company, setCompany] = useState<ExtendedCompanyRecord | null>(() => getInitialCompany(id));
+  const [company, setCompany] = useState<ExtendedCompanyRecord | null>(null);
+  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState<"research" | "prep" | "es">(
-    company?.generatedContent ? "prep" : "research"
-  );
+  const [activeTab, setActiveTab] = useState<"research" | "prep" | "es">("research");
   const [generatingEs, setGeneratingEs] = useState(false);
+  const [userPlan, setUserPlan] = useState<PlanId>("starter");
 
-  // ── Research editing ──────────────────────────────────
   const [editingResearch, setEditingResearch] = useState(false);
-  const [researchForm, setResearchForm] = useState(() => ({
-    companyPhilosophy: company?.companyPhilosophy ?? "",
-    desiredTalent: company?.desiredTalent ?? "",
-    articles: company?.articles ?? "",
-    interviewPhase: company?.interviewPhase ?? "1次面接",
-  }));
+  const [researchForm, setResearchForm] = useState({
+    companyPhilosophy: "",
+    desiredTalent: "",
+    articles: "",
+    interviewPhase: "1次面接",
+  });
 
-  // ── Content editing (regular sections) ───────────────
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
-
-  // ── Reverse question editing ──────────────────────────
   const [editingRQIndex, setEditingRQIndex] = useState<number | null>(null);
   const [rqDraft, setRqDraft] = useState<ReverseQuestion>({ opinion: "", question: "" });
 
+
   useEffect(() => {
-    if (!company) router.push("/companies");
-  }, [company, router]);
+    fetch(`/api/companies/${id}`)
+      .then(r => r.json())
+      .then(data => {
+        const c = data.company as ExtendedCompanyRecord;
+        setCompany(c);
+        setResearchForm({
+          companyPhilosophy: c.companyPhilosophy ?? "",
+          desiredTalent: c.desiredTalent ?? "",
+          articles: c.articles ?? "",
+          interviewPhase: c.interviewPhase ?? "1次面接",
+        });
+        if (c.generatedContent) setActiveTab("prep");
+        setLoading(false);
+      })
+      .catch(() => {
+        router.push("/companies");
+        setLoading(false);
+      });
+    fetch("/api/plan")
+      .then(r => r.json())
+      .then(d => setUserPlan(d.planId ?? "starter"))
+      .catch(() => setUserPlan("starter"));
+  }, [id, router]);
+
+  const updateCompany = useCallback(async (updates: Partial<ExtendedCompanyRecord>) => {
+    const res = await fetch(`/api/companies/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setCompany(data.company as ExtendedCompanyRecord);
+    }
+  }, [id]);
 
   const copyToClipboard = async (text: string, key: string) => {
     await navigator.clipboard.writeText(text);
@@ -67,16 +96,8 @@ export default function CompanyDetailPage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const updateCompany = (next: ExtendedCompanyRecord) => {
-    saveCompany(next);
-    setCompany(next);
-  };
-
-  // ── Research save ─────────────────────────────────────
-  const saveResearch = () => {
-    if (!company) return;
-    updateCompany({
-      ...company,
+  const saveResearch = async () => {
+    await updateCompany({
       companyPhilosophy: researchForm.companyPhilosophy,
       desiredTalent: researchForm.desiredTalent,
       articles: researchForm.articles,
@@ -85,18 +106,20 @@ export default function CompanyDetailPage() {
     setEditingResearch(false);
   };
 
-  const handlePhaseChange = (phase: string) => {
-    if (!company) return;
-    updateCompany({ ...company, interviewPhase: phase });
+  const handlePhaseChange = async (phase: string) => {
+    await updateCompany({ interviewPhase: phase });
     setResearchForm((prev) => ({ ...prev, interviewPhase: phase }));
   };
 
-  // ── Regenerate ────────────────────────────────────────
+  const getProfileData = (): Record<string, string> => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("naiteiNaviProfile") : null;
+    return saved ? JSON.parse(saved) : {};
+  };
+
   const handleRegenerate = async () => {
     if (!company) return;
     setRegenerating(true);
-    const profile = localStorage.getItem(PROFILE_KEY);
-    const profileData = profile ? JSON.parse(profile) : {};
+    const profileData = getProfileData();
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -114,8 +137,8 @@ export default function CompanyDetailPage() {
           motivationMemo: company.motivationMemo ?? "",
         }),
       });
-      const content: GeneratedContent = await res.json();
-      updateCompany({ ...company, generatedContent: content });
+      const generatedContent = await res.json();
+      await updateCompany({ generatedContent });
       setActiveTab("prep");
     } catch (error) {
       console.error(error);
@@ -124,12 +147,10 @@ export default function CompanyDetailPage() {
     }
   };
 
-  // ── ES generation ────────────────────────────────────
   const handleGenerateEs = async () => {
     if (!company) return;
     setGeneratingEs(true);
-    const profile = localStorage.getItem("naiteiNaviProfile");
-    const profileData = profile ? JSON.parse(profile) : {};
+    const profileData = getProfileData();
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -142,14 +163,14 @@ export default function CompanyDetailPage() {
           companyPhilosophy: company.companyPhilosophy,
           desiredTalent: company.desiredTalent,
           articles: company.articles,
-          strengthsOverride: (company as ExtendedCompanyRecord).strengthsOverride ?? "",
-          weaknessesOverride: (company as ExtendedCompanyRecord).weaknessesOverride ?? "",
-          motivationMemo: (company as ExtendedCompanyRecord).motivationMemo ?? "",
+          strengthsOverride: company.strengthsOverride ?? "",
+          weaknessesOverride: company.weaknessesOverride ?? "",
+          motivationMemo: company.motivationMemo ?? "",
           mode: "es",
         }),
       });
       const esContent: EsContent = await res.json();
-      updateCompany({ ...company, esContent });
+      await updateCompany({ esContent });
       setActiveTab("es");
     } catch (e) {
       console.error(e);
@@ -158,7 +179,6 @@ export default function CompanyDetailPage() {
     }
   };
 
-  // ── Content section edit ──────────────────────────────
   const startEditing = (key: string, text: string) => {
     setEditingRQIndex(null);
     setEditingKey(key);
@@ -170,37 +190,43 @@ export default function CompanyDetailPage() {
     setEditDraft("");
   };
 
-  const saveContentEdit = (key: string) => {
+  const saveContentEdit = async (key: string) => {
     if (!company?.generatedContent) return;
-    updateCompany({
-      ...company,
-      generatedContent: { ...company.generatedContent, [key]: editDraft },
-    });
+    const updated = { ...company.generatedContent, [key]: editDraft };
+    await updateCompany({ generatedContent: updated });
     setEditingKey(null);
     setEditDraft("");
   };
 
-  // ── Reverse question edit ─────────────────────────────
   const startEditRQ = (index: number, rq: ReverseQuestion) => {
     setEditingKey(null);
     setEditingRQIndex(index);
     setRqDraft({ ...rq });
   };
 
-  const cancelEditRQ = () => {
-    setEditingRQIndex(null);
-  };
+  const cancelEditRQ = () => { setEditingRQIndex(null); };
 
-  const saveRQEdit = (index: number) => {
+  const saveRQEdit = async (index: number) => {
     if (!company?.generatedContent) return;
     const updated = [...company.generatedContent.reverseQuestions];
     updated[index] = rqDraft;
-    updateCompany({
-      ...company,
+    await updateCompany({
       generatedContent: { ...company.generatedContent, reverseQuestions: updated },
     });
     setEditingRQIndex(null);
   };
+
+  const canUseEs = userPlan === "growth" || userPlan === "executive";
+  const canUseMemorize = userPlan === "growth" || userPlan === "executive";
+  const isExecutive = userPlan === "executive";
+
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[var(--paper)]">
+        <p className="text-sm text-[var(--muted)]">読み込み中...</p>
+      </main>
+    );
+  }
 
   if (!company) return null;
 
@@ -216,12 +242,6 @@ export default function CompanyDetailPage() {
         { key: "closingStatement", label: "最後に一言", text: content.closingStatement },
       ]
     : [];
-
-  const researchFields = [
-    { key: "companyPhilosophy", label: "企業理念・ビジョン", placeholder: "採用ページやコーポレートサイトのビジョンをメモ" },
-    { key: "desiredTalent", label: "求める人材像", placeholder: "採用ページの人物像や期待される行動を整理" },
-    { key: "articles", label: "ニュース・IR・印象に残った情報", placeholder: "直近のニュース、事業トピック、競合比較など" },
-  ] as const;
 
   return (
     <main className="min-h-screen bg-[var(--paper)]">
@@ -248,6 +268,7 @@ export default function CompanyDetailPage() {
               "linear-gradient(90deg, rgba(20,36,100,0.9), rgba(20,36,100,0.68)), url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=80')",
           }}
         />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(26,127,229,0.22),transparent_25%)]" />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_360px] lg:px-8">
           <div>
             <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">Company Focus</p>
@@ -299,10 +320,9 @@ export default function CompanyDetailPage() {
           ))}
         </div>
 
-        {/* ── ES tab ───────────────────────────────────── */}
         {activeTab === "es" ? (
           <div className="space-y-5">
-            {!canUseFeature("esGeneration") ? (
+            {!canUseEs ? (
               <div className="rounded-[2rem] border border-[var(--line)] bg-white p-10 text-center shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
                 <span className="inline-block rounded-full bg-[var(--gold)] px-4 py-1.5 text-xs font-bold text-[var(--navy)]">Growth プランで利用可能</span>
                 <p className="mt-4 text-xl font-bold text-[var(--navy)]">ES・書類対策は Growth プランの機能です</p>
@@ -315,8 +335,7 @@ export default function CompanyDetailPage() {
               <div className="rounded-[2rem] border border-[var(--line)] bg-white p-10 text-center shadow-[0_24px_60px_rgba(26,45,122,0.08)]">
                 <p className="text-2xl font-bold text-[var(--navy)]">ES・書類対策を生成します</p>
                 <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-[var(--ink-soft)]">
-                  自己PR・アピールポイント・志望理由を各200字程度のES用文章として生成します。<br />
-                  面接対策を先に生成しておくと、より精度が上がります。
+                  自己PR・アピールポイント・志望理由を各200字程度のES用文章として生成します。
                 </p>
                 <button
                   onClick={handleGenerateEs}
@@ -339,11 +358,11 @@ export default function CompanyDetailPage() {
                   </button>
                 </div>
                 {[
-                  { key: "esSelfPR", label: "自己PR" },
-                  { key: "esAppealPoints", label: "アピールポイント" },
-                  { key: "esMotivation", label: "志望理由" },
+                  { key: "esSelfPR" as keyof EsContent, label: "自己PR" },
+                  { key: "esAppealPoints" as keyof EsContent, label: "アピールポイント" },
+                  { key: "esMotivation" as keyof EsContent, label: "志望理由" },
                 ].map((section) => {
-                  const text = company.esContent?.[section.key as keyof EsContent] ?? "";
+                  const text = company.esContent?.[section.key] ?? "";
                   return (
                     <article
                       key={section.key}
@@ -455,7 +474,6 @@ export default function CompanyDetailPage() {
           </div>
 
         ) : (
-          /* ── Prep tab ──────────────────────────────────── */
           <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
             <div className="space-y-5">
               {!content ? (
@@ -474,7 +492,6 @@ export default function CompanyDetailPage() {
                 </div>
               ) : (
                 <>
-                  {/* Regular sections */}
                   {sections.map((section) => (
                     <article
                       key={section.key}
@@ -485,132 +502,131 @@ export default function CompanyDetailPage() {
                         <div className="flex items-center gap-2">
                           {editingKey === section.key ? (
                             <>
-                              <button
-                                onClick={cancelEditing}
-                                className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--muted)] transition hover:bg-[var(--paper)]"
-                              >
+                              <button onClick={cancelEditing} className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--muted)] transition hover:bg-[var(--paper)]">
                                 キャンセル
                               </button>
-                              <button
-                                onClick={() => saveContentEdit(section.key)}
-                                className="rounded-full bg-[var(--gold)] px-4 py-2 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
-                              >
+                              <button onClick={() => saveContentEdit(section.key)} className="rounded-full bg-[var(--gold)] px-4 py-2 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]">
                                 保存
                               </button>
                             </>
                           ) : (
                             <>
-                              <button
-                                onClick={() => copyToClipboard(section.text, section.key)}
-                                className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
-                              >
+                              <button onClick={() => copyToClipboard(section.text, section.key)} className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]">
                                 {copied === section.key ? "コピー済み" : "コピー"}
                               </button>
-                              <button
-                                onClick={() => startEditing(section.key, section.text)}
-                                className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
-                              >
+                              <button onClick={() => startEditing(section.key, section.text)} className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]">
                                 編集
                               </button>
                             </>
                           )}
                         </div>
                       </div>
-
                       <div className="mt-5">
                         {editingKey === section.key ? (
-                          <textarea
-                            value={editDraft}
-                            onChange={(e) => setEditDraft(e.target.value)}
-                            rows={8}
-                            className="w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-[var(--paper)] px-4 py-3 text-sm leading-8 text-[var(--ink)] focus:border-[var(--navy)] focus:outline-none"
-                          />
+                          <textarea value={editDraft} onChange={(e) => setEditDraft(e.target.value)} rows={8} className="w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-[var(--paper)] px-4 py-3 text-sm leading-8 text-[var(--ink)] focus:border-[var(--navy)] focus:outline-none" />
                         ) : (
-                          <p className="whitespace-pre-line text-sm leading-8 text-[var(--ink-soft)]">
-                            {section.text}
-                          </p>
+                          <p className="whitespace-pre-line text-sm leading-8 text-[var(--ink-soft)]">{section.text}</p>
                         )}
                       </div>
                     </article>
                   ))}
+
+                  {/* Executive features */}
+                  {isExecutive && content.finalInterviewDeepDive && (
+                    <article className="rounded-[1.75rem] border border-[var(--gold)] bg-white p-6 shadow-[0_20px_50px_rgba(26,45,122,0.07)]">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold)]">Executive</span>
+                          <h3 className="mt-1 font-serif text-3xl text-[var(--navy)]">最終面接 深掘り対策</h3>
+                        </div>
+                        <button onClick={() => copyToClipboard(content.finalInterviewDeepDive ?? "", "finalDeepDive")} className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]">
+                          {copied === "finalDeepDive" ? "コピー済み" : "コピー"}
+                        </button>
+                      </div>
+                      <p className="mt-5 whitespace-pre-line text-sm leading-8 text-[var(--ink-soft)]">{content.finalInterviewDeepDive}</p>
+                    </article>
+                  )}
+
+                  {isExecutive && content.competitorComparison && (
+                    <article className="rounded-[1.75rem] border border-[var(--gold)] bg-white p-6 shadow-[0_20px_50px_rgba(26,45,122,0.07)]">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold)]">Executive</span>
+                          <h3 className="mt-1 font-serif text-3xl text-[var(--navy)]">競合比較・差別化軸</h3>
+                        </div>
+                        <button onClick={() => copyToClipboard(content.competitorComparison ?? "", "competitorComp")} className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]">
+                          {copied === "competitorComp" ? "コピー済み" : "コピー"}
+                        </button>
+                      </div>
+                      <p className="mt-5 whitespace-pre-line text-sm leading-8 text-[var(--ink-soft)]">{content.competitorComparison}</p>
+                    </article>
+                  )}
+
+                  {isExecutive && content.variations && Object.keys(content.variations).length > 0 && (
+                    <article className="rounded-[1.75rem] border border-[var(--gold)] bg-white p-6 shadow-[0_20px_50px_rgba(26,45,122,0.07)]">
+                      <div className="border-b border-[var(--line)] pb-4">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold)]">Executive</span>
+                        <h3 className="mt-1 font-serif text-3xl text-[var(--navy)]">複数バリエーション</h3>
+                        <p className="mt-1 text-xs text-[var(--muted)]">同じ質問への別アプローチを比較できます</p>
+                      </div>
+                      <div className="mt-5 space-y-4">
+                        {Object.entries(content.variations).map(([key, variants]) => (
+                          variants.length > 0 && (
+                            <div key={key} className="rounded-[1.25rem] bg-[var(--paper)] p-4">
+                              <p className="text-xs font-semibold text-[var(--navy)]">
+                                {key === "strengths" ? "強み（別バリエーション）" : key === "motivation" ? "志望理由（別バリエーション）" : key}
+                              </p>
+                              {variants.map((variant, i) => (
+                                <p key={i} className="mt-3 text-sm leading-8 text-[var(--ink-soft)]">{variant}</p>
+                              ))}
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </article>
+                  )}
 
                   {/* Reverse questions */}
                   <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(26,45,122,0.07)]">
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
                       <h3 className="font-serif text-3xl text-[var(--navy)]">逆質問</h3>
                       <button
-                        onClick={() =>
-                          copyToClipboard(
-                            content.reverseQuestions.map((q, i) => `Q${i + 1}\n${q.opinion}\n${q.question}`).join("\n\n"),
-                            "reverse-all"
-                          )
-                        }
+                        onClick={() => copyToClipboard(content.reverseQuestions.map((q, i) => `Q${i + 1}\n${q.opinion}\n${q.question}`).join("\n\n"), "reverse-all")}
                         className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
                       >
                         {copied === "reverse-all" ? "コピー済み" : "全てコピー"}
                       </button>
                     </div>
-
                     <div className="mt-6 space-y-4">
                       {content.reverseQuestions.map((question, index) => (
                         <div key={index} className="rounded-[1.5rem] bg-[var(--paper)] p-5">
                           {editingRQIndex === index ? (
-                            /* Edit mode for this question */
                             <div className="space-y-4">
                               <div className="flex items-center justify-between">
                                 <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">Q{index + 1}</p>
                                 <div className="flex gap-2">
-                                  <button
-                                    onClick={cancelEditRQ}
-                                    className="rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] transition hover:bg-white"
-                                  >
-                                    キャンセル
-                                  </button>
-                                  <button
-                                    onClick={() => saveRQEdit(index)}
-                                    className="rounded-full bg-[var(--gold)] px-3 py-1.5 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]"
-                                  >
-                                    保存
-                                  </button>
+                                  <button onClick={cancelEditRQ} className="rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] transition hover:bg-white">キャンセル</button>
+                                  <button onClick={() => saveRQEdit(index)} className="rounded-full bg-[var(--gold)] px-3 py-1.5 text-xs font-semibold text-[var(--navy)] transition hover:bg-[#50a8ff]">保存</button>
                                 </div>
                               </div>
                               <div>
                                 <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">自分の意見</p>
-                                <textarea
-                                  value={rqDraft.opinion}
-                                  onChange={(e) => setRqDraft((prev) => ({ ...prev, opinion: e.target.value }))}
-                                  rows={3}
-                                  className="mt-2 w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-white px-4 py-3 text-sm leading-7 text-[var(--ink)] focus:border-[var(--navy)] focus:outline-none"
-                                />
+                                <textarea value={rqDraft.opinion} onChange={(e) => setRqDraft((prev) => ({ ...prev, opinion: e.target.value }))} rows={3} className="mt-2 w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-white px-4 py-3 text-sm leading-7 text-[var(--ink)] focus:border-[var(--navy)] focus:outline-none" />
                               </div>
                               <div>
                                 <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">質問</p>
-                                <textarea
-                                  value={rqDraft.question}
-                                  onChange={(e) => setRqDraft((prev) => ({ ...prev, question: e.target.value }))}
-                                  rows={2}
-                                  className="mt-2 w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-white px-4 py-3 text-sm leading-7 text-[var(--ink)] focus:border-[var(--navy)] focus:outline-none"
-                                />
+                                <textarea value={rqDraft.question} onChange={(e) => setRqDraft((prev) => ({ ...prev, question: e.target.value }))} rows={2} className="mt-2 w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-white px-4 py-3 text-sm leading-7 text-[var(--ink)] focus:border-[var(--navy)] focus:outline-none" />
                               </div>
                             </div>
                           ) : (
-                            /* Read mode */
                             <div>
                               <div className="flex items-center justify-between gap-4">
                                 <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">Q{index + 1}</p>
                                 <div className="flex gap-2">
-                                  <button
-                                    onClick={() => copyToClipboard(`${question.opinion}\n${question.question}`, `q${index}`)}
-                                    className="rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
-                                  >
+                                  <button onClick={() => copyToClipboard(`${question.opinion}\n${question.question}`, `q${index}`)} className="rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]">
                                     {copied === `q${index}` ? "コピー済み" : "コピー"}
                                   </button>
-                                  <button
-                                    onClick={() => startEditRQ(index, question)}
-                                    className="rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
-                                  >
-                                    編集
-                                  </button>
+                                  <button onClick={() => startEditRQ(index, question)} className="rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]">編集</button>
                                 </div>
                               </div>
                               <p className="mt-4 text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">自分の意見</p>
@@ -628,7 +644,7 @@ export default function CompanyDetailPage() {
             </div>
 
             <aside className="space-y-4">
-              {content && canUseFeature("memorization") && (
+              {content && canUseMemorize && (
                 <Link
                   href={`/companies/${id}/memorize`}
                   className="flex items-center justify-between rounded-[1.75rem] border border-[var(--gold)] bg-[var(--gold)] p-5 text-[var(--navy)] shadow-[0_8px_30px_rgba(26,45,122,0.15)] transition hover:bg-[#50a8ff]"

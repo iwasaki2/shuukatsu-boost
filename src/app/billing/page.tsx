@@ -3,50 +3,70 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { PLANS, getCurrentPlan, setCurrentPlan, type PlanId } from "@/lib/plans";
-import { getCurrentUser } from "@/lib/auth";
+import { PLANS, type PlanId } from "@/lib/plans";
 
 function BillingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [currentPlan, setCurrentPlanState] = useState<PlanId>("starter");
+  const [currentPlan, setCurrentPlan] = useState<PlanId>("starter");
   const [loading, setLoading] = useState<PlanId | null>(null);
   const [toast, setToast] = useState("");
+  const [planLoaded, setPlanLoaded] = useState(false);
 
   useEffect(() => {
-    setCurrentPlanState(getCurrentPlan());
+    fetch("/api/plan")
+      .then(r => r.json())
+      .then(d => {
+        setCurrentPlan(d.planId ?? "starter");
+        setPlanLoaded(true);
+      })
+      .catch(() => {
+        setCurrentPlan("starter");
+        setPlanLoaded(true);
+      });
+  }, []);
 
-    // Stripe 決済後のリダイレクト処理
+  useEffect(() => {
+    if (!planLoaded) return;
     const success = searchParams.get("success");
     const canceled = searchParams.get("canceled");
     const plan = searchParams.get("plan") as PlanId | null;
 
     if (success === "1" && plan) {
-      setCurrentPlan(plan);
-      setCurrentPlanState(plan);
-      setToast(`${plan === "growth" ? "Growth" : "Executive"} プランへのアップグレードが完了しました！`);
-      setTimeout(() => setToast(""), 4000);
+      const msg = `${plan === "growth" ? "Growth" : "Executive"} プランへのアップグレードが完了しました！`;
+      fetch("/api/plan")
+        .then(r => r.json())
+        .then(d => {
+          setCurrentPlan(d.planId ?? "starter");
+          setToast(msg);
+          setTimeout(() => setToast(""), 4000);
+        })
+        .catch(() => {
+          setToast(msg);
+          setTimeout(() => setToast(""), 4000);
+        });
     }
     if (canceled === "1") {
-      setToast("決済がキャンセルされました");
-      setTimeout(() => setToast(""), 3000);
+      fetch("/api/plan")
+        .then(r => r.json())
+        .then(d => {
+          setCurrentPlan(d.planId ?? "starter");
+          setToast("決済がキャンセルされました");
+          setTimeout(() => setToast(""), 3000);
+        })
+        .catch(() => {
+          setToast("決済がキャンセルされました");
+          setTimeout(() => setToast(""), 3000);
+        });
     }
-  }, [searchParams]);
+  }, [searchParams, planLoaded]);
 
   const handleUpgrade = async (planId: PlanId) => {
     if (planId === "starter") {
-      if (confirm("Starter（無料）プランにダウングレードしますか？")) {
-        setCurrentPlan("starter");
-        setCurrentPlanState("starter");
-        setToast("Starter プランに変更しました");
-        setTimeout(() => setToast(""), 3000);
+      if (confirm("Starter（無料）プランにダウングレードしますか？\n※解約はStripeダッシュボードで行ってください。")) {
+        setToast("解約手続きはメールにてご連絡ください");
+        setTimeout(() => setToast(""), 4000);
       }
-      return;
-    }
-
-    const user = getCurrentUser();
-    if (!user) {
-      router.push("/login");
       return;
     }
 
@@ -55,23 +75,23 @@ function BillingContent() {
       const res = await fetch("/api/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, userId: user.id, userEmail: user.email }),
+        body: JSON.stringify({ planId }),
       });
+
+      if (res.status === 401) {
+        router.push("/login?from=/billing");
+        return;
+      }
+
       const data = await res.json();
       if (data.url) {
-        window.location.href = data.url;
+        window.location.assign(data.url);
       } else {
-        // Stripe 未設定の場合はデモとして即時反映
-        setCurrentPlan(planId);
-        setCurrentPlanState(planId);
-        setToast(`${planId === "growth" ? "Growth" : "Executive"} プランに変更しました（デモ）`);
+        setToast(data.error ?? "決済URLの取得に失敗しました");
         setTimeout(() => setToast(""), 3000);
       }
     } catch {
-      // Stripe 未設定時のデモモード
-      setCurrentPlan(planId);
-      setCurrentPlanState(planId);
-      setToast(`${planId === "growth" ? "Growth" : "Executive"} プランに変更しました（デモ）`);
+      setToast("ネットワークエラーが発生しました");
       setTimeout(() => setToast(""), 3000);
     } finally {
       setLoading(null);
@@ -80,7 +100,6 @@ function BillingContent() {
 
   return (
     <main className="min-h-screen bg-[var(--paper)]">
-      {/* Toast */}
       {toast && (
         <div className="fixed right-4 top-4 z-50 rounded-full bg-[var(--navy)] px-5 py-3 text-sm font-semibold text-white shadow-lg">
           {toast}
@@ -96,7 +115,7 @@ function BillingContent() {
             <p className="text-sm font-bold text-white">プランと料金</p>
             <p className="text-[10px] text-white/50">
               現在: <span className="font-semibold text-[var(--gold-soft)]">
-                {currentPlan === "starter" ? "Starter（無料）" : currentPlan === "growth" ? "Growth" : "Executive"}
+                {!planLoaded ? "..." : currentPlan === "starter" ? "Starter（無料）" : currentPlan === "growth" ? "Growth" : "Executive"}
               </span>
             </p>
           </div>
@@ -113,7 +132,6 @@ function BillingContent() {
         <div className="grid gap-5 md:grid-cols-3">
           {PLANS.map((plan) => {
             const isCurrent = currentPlan === plan.id;
-            const isHigher = ["growth", "executive"].indexOf(plan.id) > ["growth", "executive"].indexOf(currentPlan);
 
             return (
               <div
@@ -175,7 +193,6 @@ function BillingContent() {
           })}
         </div>
 
-        {/* 機能比較テーブル */}
         <div className="mt-14 overflow-hidden rounded-[1.75rem] border border-[var(--line)] bg-white shadow-[0_8px_30px_rgba(26,45,122,0.06)]">
           <div className="p-6">
             <h2 className="text-lg font-bold text-[var(--navy)]">機能の比較</h2>
@@ -199,8 +216,10 @@ function BillingContent() {
                 { label: "ES・書類対策（自己PR等）", starter: "—", growth: "✓", executive: "✓" },
                 { label: "暗記モード", starter: "—", growth: "✓", executive: "✓" },
                 { label: "一括削除・管理", starter: "—", growth: "✓", executive: "✓" },
+                { label: "AIモデル品質", starter: "標準", growth: "高品質", executive: "最高品質" },
                 { label: "最終面接特化の深掘り", starter: "—", growth: "—", executive: "✓" },
                 { label: "競合比較軸の生成", starter: "—", growth: "—", executive: "✓" },
+                { label: "複数バリエーション生成", starter: "—", growth: "—", executive: "✓" },
               ].map((row) => (
                 <tr key={row.label} className="border-t border-[var(--line)]">
                   <td className="px-6 py-3.5 text-[var(--ink-soft)]">{row.label}</td>

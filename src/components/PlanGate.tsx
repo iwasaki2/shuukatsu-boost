@@ -1,7 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PlanId } from "@/lib/plans";
+
+const PLAN_ORDER: PlanId[] = ["starter", "growth", "executive"];
+
+function planSatisfies(userPlan: PlanId, required: PlanId): boolean {
+  return PLAN_ORDER.indexOf(userPlan) >= PLAN_ORDER.indexOf(required);
+}
 
 interface PlanGateProps {
   feature: string;
@@ -11,16 +18,37 @@ interface PlanGateProps {
 
 export function PlanGate({ feature, requiredPlan, children }: PlanGateProps) {
   const router = useRouter();
+  const [userPlan, setUserPlan] = useState<PlanId | null>(null);
+
+  useEffect(() => {
+    fetch("/api/plan")
+      .then((r) => r.json())
+      .then((d) => setUserPlan(d.planId ?? "starter"))
+      .catch(() => setUserPlan("starter"));
+  }, []);
+
+  if (userPlan === null) {
+    return (
+      <div className="relative">
+        <div className="pointer-events-none select-none blur-[3px] opacity-40">
+          {children}
+        </div>
+      </div>
+    );
+  }
+
+  if (planSatisfies(userPlan, requiredPlan)) {
+    return <>{children}</>;
+  }
+
   const label = requiredPlan === "growth" ? "Growth" : "Executive";
   const price = requiredPlan === "growth" ? "¥980" : "¥1,980";
 
   return (
     <div className="relative">
-      {/* ブラー表示 */}
       <div className="pointer-events-none select-none blur-[3px] opacity-40">
         {children}
       </div>
-      {/* オーバーレイ */}
       <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[1.75rem] bg-white/80 backdrop-blur-sm">
         <div className="text-center px-6">
           <span className="inline-block rounded-full bg-[var(--gold)] px-3 py-1 text-xs font-bold text-[var(--navy)]">

@@ -1,15 +1,10 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useRouter } from "next/navigation";
-import {
-  getCompanies,
-  deleteCompany,
-  saveCompany,
-  type CompanyRecord,
-  PHASE_STYLES,
-  PHASE_ORDER,
-} from "@/lib/companies";
+import Image from "next/image";
+import type { CompanyRecord } from "@/lib/companies";
+import { PHASE_STYLES, PHASE_ORDER } from "@/lib/companies";
 
 const PROFILE_KEY = "naiteiNaviProfile";
 
@@ -39,12 +34,6 @@ const notes = [
   },
 ];
 
-function getStoredProfile(): Profile | null {
-  if (typeof window === "undefined") return null;
-  const saved = localStorage.getItem(PROFILE_KEY);
-  return saved ? (JSON.parse(saved) as Profile) : null;
-}
-
 function ProfileRow({ label, value }: { label: string; value: string }) {
   if (!value) return null;
   return (
@@ -58,31 +47,79 @@ function ProfileRow({ label, value }: { label: string; value: string }) {
 export default function CompaniesPage() {
   const router = useRouter();
   const [tab, setTab] = useState<"companies" | "profile">("companies");
-  const [companies, setCompanies] = useState<CompanyRecord[]>(() => getCompanies());
-  const [profile] = useState<Profile | null>(() => getStoredProfile());
+  const [companies, setCompanies] = useState<CompanyRecord[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
 
-  const refreshCompanies = () => setCompanies(getCompanies());
-
-  const handleDelete = (id: string, name: string) => {
-    if (!confirm(`「${name}」を選考リストから削除しますか？`)) return;
-    deleteCompany(id);
-    setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
-    refreshCompanies();
+  const fetchCompanies = async () => {
+    try {
+      const res = await fetch("/api/companies");
+      const data = await res.json();
+      setCompanies(data.companies ?? []);
+    } catch {
+      setCompanies([]);
+    } finally {
+      setLoadingCompanies(false);
+    }
   };
 
-  const handleBulkDelete = () => {
+  useEffect(() => {
+    fetch("/api/companies")
+      .then(r => r.json())
+      .then(d => {
+        setCompanies(d.companies ?? []);
+        setLoadingCompanies(false);
+      })
+      .catch(() => setLoadingCompanies(false));
+    fetch("/api/profile")
+      .then(r => r.json())
+      .then(d => {
+        if (d.profile) {
+          setProfile({
+            name: d.profile.displayName ?? "",
+            university: d.profile.university ?? "",
+            faculty: d.profile.faculty ?? "",
+            background: d.profile.background ?? "",
+            gakuchika: d.profile.gakuchika ?? "",
+            strengths: d.profile.strengths ?? "",
+            weaknesses: d.profile.weaknesses ?? "",
+            jobAxis: d.profile.jobAxis ?? "",
+          });
+        } else {
+          const saved = typeof window !== "undefined" ? localStorage.getItem(PROFILE_KEY) : null;
+          if (saved) setProfile(JSON.parse(saved) as Profile);
+        }
+      })
+      .catch(() => {
+        const saved = typeof window !== "undefined" ? localStorage.getItem(PROFILE_KEY) : null;
+        if (saved) setProfile(JSON.parse(saved) as Profile);
+      });
+  }, []);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`「${name}」を選考リストから削除しますか？`)) return;
+    await fetch(`/api/companies/${id}`, { method: "DELETE" });
+    setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    await fetchCompanies();
+  };
+
+  const handleBulkDelete = async () => {
     if (selected.size === 0) return;
     if (!confirm(`選択した ${selected.size} 社を削除しますか？`)) return;
-    selected.forEach((id) => deleteCompany(id));
+    await Promise.all([...selected].map((id) => fetch(`/api/companies/${id}`, { method: "DELETE" })));
     setSelected(new Set());
-    refreshCompanies();
+    await fetchCompanies();
   };
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -95,9 +132,13 @@ export default function CompaniesPage() {
     }
   };
 
-  const handlePhaseChange = (company: CompanyRecord, phase: string) => {
-    saveCompany({ ...company, interviewPhase: phase });
-    refreshCompanies();
+  const handlePhaseChange = async (company: CompanyRecord, phase: string) => {
+    await fetch(`/api/companies/${company.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ interviewPhase: phase }),
+    });
+    await fetchCompanies();
   };
 
   const activeCount = companies.filter((c) => c.interviewPhase !== "内定").length;
@@ -128,7 +169,7 @@ export default function CompaniesPage() {
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(26,45,122,0.82)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           <button onClick={() => router.push("/")}>
-            <img src="/logo-icon.png" alt="ガクチカBoost" className="h-10 w-10 rounded-full" />
+            <Image src="/logo-icon.png" alt="ガクチカBoost" width={40} height={40} className="h-10 w-10 rounded-full" />
           </button>
           <button
             onClick={() => router.push("/input")}
@@ -232,7 +273,9 @@ export default function CompaniesPage() {
                   ))}
                 </div>
 
-                {companies.length === 0 ? (
+                {loadingCompanies ? (
+                  <div className="py-20 text-center text-sm text-[var(--muted)]">読み込み中...</div>
+                ) : companies.length === 0 ? (
                   <div className="py-20 text-center">
                     <p className="font-serif text-3xl text-[var(--navy)]">まだ企業が登録されていません</p>
                     <p className="mx-auto mt-4 max-w-lg text-sm leading-8 text-[var(--ink-soft)]">
@@ -247,7 +290,6 @@ export default function CompaniesPage() {
                   </div>
                 ) : (
                   <div className="mt-6 space-y-3">
-                    {/* 全選択行 */}
                     <div className="flex items-center justify-between px-1 pb-2">
                       <label className="flex cursor-pointer items-center gap-2.5 text-xs font-semibold text-[var(--muted)] hover:text-[var(--navy)]">
                         <input
@@ -276,9 +318,7 @@ export default function CompaniesPage() {
                               : "border-[var(--line)] bg-white"
                           }`}
                         >
-                          {/* Main row */}
                           <div className="flex items-center gap-3 p-4 lg:p-5">
-                            {/* Checkbox */}
                             <input
                               type="checkbox"
                               checked={selected.has(company.id)}
@@ -286,12 +326,10 @@ export default function CompaniesPage() {
                               className="h-4 w-4 shrink-0 rounded accent-[var(--navy)]"
                               onClick={(e) => e.stopPropagation()}
                             />
-                            {/* Avatar */}
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--navy)] text-base font-bold text-[var(--gold-soft)]">
                               {initial}
                             </div>
 
-                            {/* Info */}
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="font-semibold text-[var(--navy)]">{company.companyName}</h3>
@@ -306,7 +344,6 @@ export default function CompaniesPage() {
                               </div>
                               <p className="mt-0.5 text-xs text-[var(--muted)]">{company.jobType}</p>
 
-                              {/* Phase progress dots */}
                               <div className="mt-2.5 flex items-center gap-1.5">
                                 {PHASE_ORDER.map((phase, i) => (
                                   <Fragment key={phase}>
@@ -329,7 +366,6 @@ export default function CompaniesPage() {
                               </div>
                             </div>
 
-                            {/* Actions */}
                             <div className="flex shrink-0 gap-2">
                               <button
                                 onClick={() => router.push(`/companies/${company.id}`)}
@@ -346,7 +382,6 @@ export default function CompaniesPage() {
                             </div>
                           </div>
 
-                          {/* Phase change strip */}
                           <div className="flex flex-wrap gap-1.5 border-t border-[var(--line)] bg-[var(--paper)] px-5 py-2.5">
                             {PHASE_ORDER.map((phase) => (
                               <button
