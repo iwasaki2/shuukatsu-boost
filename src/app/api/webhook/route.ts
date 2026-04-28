@@ -2,9 +2,11 @@ import Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import type { PlanId } from "@/lib/plans";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
-  apiVersion: "2026-04-22.dahlia",
-});
+let _stripe: Stripe | null = null;
+function getStripe() {
+  if (!_stripe) _stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", { apiVersion: "2026-04-22.dahlia" });
+  return _stripe;
+}
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -12,7 +14,7 @@ export async function POST(request: Request) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET ?? "");
+    event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET ?? "");
   } catch {
     return Response.json({ error: "Webhook signature verification failed" }, { status: 400 });
   }

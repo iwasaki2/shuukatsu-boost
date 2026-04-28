@@ -2,9 +2,11 @@ import Stripe from "stripe";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
-  apiVersion: "2026-04-22.dahlia",
-});
+let _stripe: Stripe | null = null;
+function getStripe() {
+  if (!_stripe) _stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", { apiVersion: "2026-04-22.dahlia" });
+  return _stripe;
+}
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -51,7 +53,7 @@ export async function POST(request: Request) {
       checkoutParams.customer_email = user.email;
     }
 
-    const checkoutSession = await stripe.checkout.sessions.create(checkoutParams);
+    const checkoutSession = await getStripe().checkout.sessions.create(checkoutParams);
     return Response.json({ url: checkoutSession.url });
   } catch (error) {
     console.error("Checkout error:", error);
