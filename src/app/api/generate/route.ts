@@ -3,7 +3,11 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import type { PlanId } from "@/lib/plans";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+let _groq: Groq | null = null;
+function getGroq() {
+  if (!_groq) _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  return _groq;
+}
 
 interface PlanConfig {
   model: string;
@@ -263,7 +267,7 @@ async function requestStructuredJson(
   model: string,
   temperature: number
 ): Promise<Record<string, unknown>> {
-  const completion = await groq.chat.completions.create({
+  const completion = await getGroq().chat.completions.create({
     model,
     messages: [{ role: "user", content: prompt }],
     temperature,
@@ -281,7 +285,7 @@ async function requestStructuredJson(
 壊れた応答:
 ${text}`;
 
-    const repaired = await groq.chat.completions.create({
+    const repaired = await getGroq().chat.completions.create({
       model,
       messages: [{ role: "user", content: repairPrompt }],
       temperature: 0,

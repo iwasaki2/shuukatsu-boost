@@ -1,8 +1,7 @@
 import Groq from "groq-sdk";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
 export async function POST(request: Request) {
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   try {
     const { companyName } = await request.json();
     if (!companyName) return Response.json({ error: "企業名が必要です" }, { status: 400 });

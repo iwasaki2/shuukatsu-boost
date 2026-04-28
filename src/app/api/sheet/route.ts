@@ -2,7 +2,11 @@ import Groq from "groq-sdk";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+let _groq: Groq | null = null;
+function getGroq() {
+  if (!_groq) _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  return _groq;
+}
 
 interface ReverseQuestion { opinion: string; question: string; }
 interface AnticipatedQuestion { question: string; answer: string; }
@@ -76,7 +80,7 @@ async function generateSheetExtras(
 }`;
 
   try {
-    const completion = await groq.chat.completions.create({
+    const completion = await getGroq().chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.6,
