@@ -16,9 +16,27 @@ function createPrismaClient(): PrismaClient {
   return new PrismaClient({ adapter });
 }
 
-export const prisma: PrismaClient =
-  globalThis.__prisma ?? createPrismaClient();
+function getPrismaClient(): PrismaClient {
+  if (globalThis.__prisma) {
+    return globalThis.__prisma;
+  }
 
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__prisma = prisma;
+  const client = createPrismaClient();
+
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.__prisma = client;
+  }
+
+  return client;
 }
+
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getPrismaClient();
+    return Reflect.get(client, prop, receiver);
+  },
+  set(_target, prop, value, receiver) {
+    const client = getPrismaClient();
+    return Reflect.set(client, prop, value, receiver);
+  },
+}) as PrismaClient;
