@@ -1,0 +1,16 @@
+.git
+.next
+.next.bak-*
+node_modules
+npm-debug.log*
+.env
+.env.local
+dev.db
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+coverage
+.DS_Store
+tsconfig.tsbuildinfo
+

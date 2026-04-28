@@ -2,6 +2,49 @@
 
 就活生向けの AI 面接対策サービスです。企業選択、想定質問の生成、回答作成の練習までを一連で扱う Next.js アプリです。
 
+## デプロイ
+
+このアプリは `Prisma + PostgreSQL` を前提にすると `Vercel` にそのまま載せやすいです。PC でもスマホでも、発行された公開 URL にアクセスすればそのまま確認できます。
+
+### Vercel で公開する
+
+1. このリポジトリを GitHub に push する
+2. `Neon` で PostgreSQL データベースを作成する
+3. `Vercel` で `New Project` → GitHub リポジトリを import
+4. `Environment Variables` に以下を設定する
+
+```bash
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require
+JWT_SECRET=十分に長いランダム文字列
+GROQ_API_KEY=あなたのGroq APIキー
+NEXT_PUBLIC_BASE_URL=https://発行されたVercelのURL
+```
+
+5. 課金機能も使う場合だけ追加
+
+```bash
+STRIPE_SECRET_KEY=
+STRIPE_GROWTH_PRICE_ID=
+STRIPE_EXECUTIVE_PRICE_ID=
+STRIPE_WEBHOOK_SECRET=
+```
+
+6. ローカルで一度だけ DB にスキーマを流し込む
+
+```bash
+npm install
+npx prisma db push
+```
+
+7. Vercel でデプロイする
+8. 発行された URL を PC / スマホで開く
+
+### 補足
+
+- Vercel では SQLite は使えないため、PostgreSQL が必要です
+- スマホでは Vercel の公開 URL をそのまま Safari / Chrome で開けば見られます
+- 認証や生成機能も公開 URL 上でそのまま動きます
+
 ## セットアップ
 
 ```bash

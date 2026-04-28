@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, type ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import type { CompanyRecord, GeneratedContent, EsContent, ReverseQuestion } from "@/lib/companies";
+import type { CompanyRecord, GeneratedContent, EsContent, ReverseQuestion, AnticipatedQuestion } from "@/lib/companies";
 import { PHASE_ORDER, PHASE_STYLES } from "@/lib/companies";
 import type { PlanId } from "@/lib/plans";
 
@@ -11,6 +11,8 @@ type ExtendedGeneratedContent = GeneratedContent & {
   finalInterviewDeepDive?: string;
   competitorComparison?: string;
   variations?: Record<string, string[]>;
+  anticipatedQuestions?: AnticipatedQuestion[];
+  preInterviewMemo?: string;
 };
 
 type ExtendedCompanyRecord = Omit<CompanyRecord, "generatedContent"> & {
@@ -25,6 +27,66 @@ const researchFields = [
   { key: "desiredTalent" as const, label: "求める人材像", placeholder: "採用ページの人物像や期待される行動を整理" },
   { key: "articles" as const, label: "ニュース・IR・印象に残った情報", placeholder: "直近のニュース、事業トピック、競合比較など" },
 ] as const;
+
+function renderInlineEmphasis(text: string): ReactNode[] {
+  return text.split(/(\*\*.*?\*\*)/g).filter(Boolean).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={index} className="font-bold text-[var(--navy)]">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+
+    return <span key={index}>{part}</span>;
+  });
+}
+
+function RichTextBlock({ text }: { text: string }) {
+  return (
+    <div className="space-y-3">
+      {text.split("\n").map((rawLine, index) => {
+        const line = rawLine.trim();
+
+        if (!line) {
+          return <div key={index} className="h-2" />;
+        }
+
+        if (line.startsWith("深掘り：") || line.startsWith("深掘り:")) {
+          return (
+            <div key={index} className="rounded-[1.15rem] border border-[rgba(26,127,229,0.16)] bg-[rgba(26,127,229,0.06)] px-4 py-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-[var(--accent)]">Deep Dive</p>
+              <p className="mt-2 text-sm leading-8 text-[var(--ink)]">{renderInlineEmphasis(line)}</p>
+            </div>
+          );
+        }
+
+        if (/^\d+.*年目/.test(line)) {
+          return (
+            <div key={index} className="pt-2">
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--accent)]">{renderInlineEmphasis(line)}</p>
+            </div>
+          );
+        }
+
+        if (line.startsWith("・")) {
+          return (
+            <div key={index} className="flex items-start gap-3">
+              <span className="mt-[9px] shrink-0 text-[var(--gold)]">•</span>
+              <p className="text-sm leading-8 text-[var(--ink-soft)]">{renderInlineEmphasis(line.slice(1).trim())}</p>
+            </div>
+          );
+        }
+
+        return (
+          <p key={index} className="text-sm leading-8 text-[var(--ink-soft)]">
+            {renderInlineEmphasis(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function CompanyDetailPage() {
   const router = useRouter();
@@ -51,6 +113,7 @@ export default function CompanyDetailPage() {
   const [editDraft, setEditDraft] = useState("");
   const [editingRQIndex, setEditingRQIndex] = useState<number | null>(null);
   const [rqDraft, setRqDraft] = useState<ReverseQuestion>({ opinion: "", question: "" });
+  const [openAnswerIndex, setOpenAnswerIndex] = useState<number | null>(null);
 
 
   useEffect(() => {
@@ -231,15 +294,17 @@ export default function CompanyDetailPage() {
   if (!company) return null;
 
   const content = company.generatedContent;
+  const hasStarterPack = !!content;
+  const anticipatedQuestionsText = content?.anticipatedQuestions?.map((item, index) => `Q${index + 1}\n${item.question}\n${item.answer}`).join("\n\n") ?? "";
   const sections = content
     ? [
-        { key: "selfIntro", label: "自己紹介", text: content.selfIntro },
-        { key: "motivation", label: "志望理由", text: content.motivation },
-        { key: "jobAxis", label: "就活の軸", text: content.jobAxis },
-        { key: "strengths", label: "強み", text: content.strengths },
-        { key: "weaknesses", label: "弱み", text: content.weaknesses },
-        { key: "careerPlan", label: "キャリアプラン", text: content.careerPlan },
-        { key: "closingStatement", label: "最後に一言", text: content.closingStatement },
+        { key: "motivation", label: "志望理由", text: content.motivation, number: "01" },
+        { key: "strengths", label: "強み", text: content.strengths, number: "02" },
+        { key: "weaknesses", label: "弱み", text: content.weaknesses, number: "03" },
+        { key: "careerPlan", label: "キャリアプラン", text: content.careerPlan, number: "04" },
+        { key: "jobAxis", label: "就活の軸", text: content.jobAxis, number: "05" },
+        { key: "selfIntro", label: "自己紹介", text: content.selfIntro, number: "06" },
+        { key: "closingStatement", label: "最後に一言", text: content.closingStatement, number: "07" },
       ]
     : [];
 
@@ -492,13 +557,86 @@ export default function CompanyDetailPage() {
                 </div>
               ) : (
                 <>
+                  <article className="overflow-hidden rounded-[1.9rem] border border-[rgba(26,45,122,0.14)] bg-white shadow-[0_24px_60px_rgba(26,45,122,0.07)]">
+                    <div className="border-b border-[var(--line)] bg-[linear-gradient(135deg,rgba(26,45,122,0.06),rgba(26,127,229,0.12))] px-6 py-5">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">Starter Pack</p>
+                          <h3 className="mt-2 font-serif text-3xl text-[var(--navy)]">面接にそのまま持ち込める対策パック</h3>
+                          <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--ink-soft)]">
+                            志望理由だけで終わらず、入室前メモと想定問答まで先回りで用意します。無料プランでも「もう準備が進んでいる」と感じられる構成です。
+                          </p>
+                        </div>
+                        <div className="grid min-w-[220px] grid-cols-2 gap-3">
+                          <div className="rounded-[1.25rem] border border-white/60 bg-white/70 p-4">
+                            <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--muted)]">直前メモ</p>
+                            <p className="mt-2 text-2xl font-bold text-[var(--navy)]">{content.preInterviewMemo ? "5分" : "0"}</p>
+                            <p className="mt-1 text-xs text-[var(--ink-soft)]">入室前の確認</p>
+                          </div>
+                          <div className="rounded-[1.25rem] border border-white/60 bg-white/70 p-4">
+                            <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--muted)]">想定問答</p>
+                            <p className="mt-2 text-2xl font-bold text-[var(--navy)]">{content.anticipatedQuestions?.length ?? 0}</p>
+                            <p className="mt-1 text-xs text-[var(--ink-soft)]">AI予測の質問</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid gap-4 px-6 py-5 md:grid-cols-[1.1fr_0.9fr]">
+                      <div className="rounded-[1.4rem] bg-[var(--paper)] p-5">
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--muted)]">今回そろうもの</p>
+                        <ul className="mt-3 space-y-2 text-sm leading-7 text-[var(--ink-soft)]">
+                          <li>・企業向けに磨いた志望理由・強み・弱み</li>
+                          <li>・入室5分前に読む一枚メモ</li>
+                          <li>・深掘りに備える想定問答</li>
+                          <li>・PDFとして保存しやすい面接対策シート</li>
+                        </ul>
+                      </div>
+                      <div className="rounded-[1.4rem] border border-[rgba(26,45,122,0.12)] bg-white p-5">
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--muted)]">ひとこと</p>
+                        <p className="mt-3 text-sm leading-7 text-[var(--ink-soft)]">
+                          面接前に見返す順番は「直前メモ → 想定問答 → 志望理由」です。答えを丸暗記するより、話の芯だけを先に固定すると安定します。
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+
+                  {content.preInterviewMemo && (
+                    <article className="rounded-[1.75rem] border-2 border-[var(--gold)] bg-gradient-to-br from-[#fffbf0] to-[#fff8e6] p-6 shadow-[0_20px_50px_rgba(200,160,0,0.12)]">
+                      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(200,160,0,0.2)] pb-4">
+                        <div>
+                          <span className="inline-block rounded-full bg-[var(--gold)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--navy)]">面接直前チェックシート</span>
+                          <h3 className="mt-2 font-serif text-2xl text-[var(--navy)]">入室5分前に読む、今日のまとめ</h3>
+                        </div>
+                        <button
+                          onClick={() => copyToClipboard(content.preInterviewMemo ?? "", "preInterviewMemo")}
+                          className="rounded-full border border-[rgba(200,160,0,0.4)] px-4 py-2 text-xs font-semibold text-[var(--navy)] transition hover:bg-[var(--gold)]"
+                        >
+                          {copied === "preInterviewMemo" ? "コピー済み" : "全文コピー"}
+                        </button>
+                      </div>
+                      <ul className="mt-5 space-y-3">
+                        {content.preInterviewMemo.split("\n").filter(line => line.trim()).map((line, i) => (
+                          <li key={i} className="flex items-start gap-3 text-sm leading-7 text-[var(--ink)]">
+                            <span className="mt-[3px] shrink-0 text-[var(--gold)] font-bold">{line.startsWith("・") ? "" : "・"}</span>
+                            <span>{line.startsWith("・") ? line.slice(1) : line}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  )}
+
                   {sections.map((section) => (
                     <article
                       key={section.key}
                       className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(26,45,122,0.07)]"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
-                        <h3 className="font-serif text-3xl text-[var(--navy)]">{section.label}</h3>
+                        <div className="flex items-center gap-3">
+                          <span className="rounded-full bg-[var(--navy)] px-3 py-1 text-[11px] font-bold tracking-[0.16em] text-white">
+                            {section.number}
+                          </span>
+                          <h3 className="font-serif text-3xl text-[var(--navy)]">{section.label}</h3>
+                        </div>
                         <div className="flex items-center gap-2">
                           {editingKey === section.key ? (
                             <>
@@ -525,7 +663,7 @@ export default function CompanyDetailPage() {
                         {editingKey === section.key ? (
                           <textarea value={editDraft} onChange={(e) => setEditDraft(e.target.value)} rows={8} className="w-full resize-y rounded-[1.25rem] border border-[var(--line)] bg-[var(--paper)] px-4 py-3 text-sm leading-8 text-[var(--ink)] focus:border-[var(--navy)] focus:outline-none" />
                         ) : (
-                          <p className="whitespace-pre-line text-sm leading-8 text-[var(--ink-soft)]">{section.text}</p>
+                          <RichTextBlock text={section.text} />
                         )}
                       </div>
                     </article>
@@ -586,6 +724,59 @@ export default function CompanyDetailPage() {
                     </article>
                   )}
 
+                  {content.anticipatedQuestions && content.anticipatedQuestions.length > 0 && (
+                    <article className="rounded-[1.75rem] border border-[rgba(26,45,122,0.18)] bg-white p-6 shadow-[0_20px_50px_rgba(26,45,122,0.07)]">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">AI Predicted</p>
+                          <h3 className="mt-1 font-serif text-3xl text-[var(--navy)]">AIが予測した想定問答</h3>
+                          <p className="mt-1.5 text-xs text-[var(--muted)]">面接でこんな質問が来る可能性が高いです。クリックで回答例を確認。</p>
+                        </div>
+                        <button
+                          onClick={() => copyToClipboard(anticipatedQuestionsText, "anticipated-all")}
+                          className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                        >
+                          {copied === "anticipated-all" ? "コピー済み" : "全てコピー"}
+                        </button>
+                      </div>
+                      <div className="mt-5 space-y-3">
+                        {content.anticipatedQuestions.map((aq, index) => (
+                          <div key={index} className="overflow-hidden rounded-[1.5rem] border border-[var(--line)]">
+                            <button
+                              onClick={() => setOpenAnswerIndex(openAnswerIndex === index ? null : index)}
+                              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-[var(--paper)]"
+                            >
+                              <div className="flex items-start gap-3">
+                                <span className="mt-0.5 shrink-0 rounded-full bg-[var(--navy)] px-2.5 py-0.5 text-[10px] font-bold text-white">Q{index + 1}</span>
+                                <span className="text-sm font-semibold text-[var(--navy)]">{aq.question}</span>
+                              </div>
+                              <svg
+                                className={`shrink-0 transition-transform ${openAnswerIndex === index ? "rotate-180" : ""}`}
+                                width="16" height="16" viewBox="0 0 16 16" fill="none"
+                              >
+                                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+                            {openAnswerIndex === index && (
+                              <div className="border-t border-[var(--line)] bg-[var(--paper)] px-5 py-4">
+                                <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">回答例</p>
+                                <div className="mt-2">
+                                  <RichTextBlock text={aq.answer} />
+                                </div>
+                                <button
+                                  onClick={() => copyToClipboard(aq.answer, `aq-${index}`)}
+                                  className="mt-3 rounded-full border border-[var(--line)] px-4 py-1.5 text-xs font-semibold text-[var(--ink-soft)] transition hover:border-[var(--navy)] hover:text-[var(--navy)]"
+                                >
+                                  {copied === `aq-${index}` ? "コピー済み" : "コピー"}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </article>
+                  )}
+
                   {/* Reverse questions */}
                   <article className="rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(26,45,122,0.07)]">
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
@@ -630,9 +821,11 @@ export default function CompanyDetailPage() {
                                 </div>
                               </div>
                               <p className="mt-4 text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">自分の意見</p>
-                              <p className="mt-2 text-sm leading-8 text-[var(--ink-soft)]">{question.opinion}</p>
+                              <div className="mt-2">
+                                <RichTextBlock text={question.opinion} />
+                              </div>
                               <p className="mt-5 text-[10px] uppercase tracking-[0.3em] text-[var(--muted)]">質問</p>
-                              <p className="mt-2 text-sm font-semibold leading-8 text-[var(--navy)]">{question.question}</p>
+                              <p className="mt-2 text-sm font-semibold leading-8 text-[var(--navy)]">{renderInlineEmphasis(question.question)}</p>
                             </div>
                           )}
                         </div>
@@ -673,6 +866,38 @@ export default function CompanyDetailPage() {
                   {regenerating ? "再生成中..." : "再生成する"}
                 </button>
               </div>
+
+              {content && (
+                <div className="rounded-[1.75rem] border border-[rgba(26,45,122,0.12)] bg-white p-6 shadow-[0_16px_40px_rgba(26,45,122,0.08)]">
+                  <p className="text-xs uppercase tracking-[0.32em] text-[var(--accent)]">Starter Bonus</p>
+                  <h3 className="mt-3 font-serif text-3xl text-[var(--navy)]">面接対策ファイルを自動生成</h3>
+                  <p className="mt-3 text-sm leading-7 text-[var(--ink-soft)]">
+                    画面の内容を、印刷用レイアウトの面接対策シートにまとめます。PCでもスマホでも見やすく、必要ならそのままPDF保存できます。
+                  </p>
+                  <div className="mt-5 rounded-[1.4rem] bg-[var(--paper)] p-4">
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--muted)]">含まれる内容</p>
+                    <p className="mt-2 text-sm leading-7 text-[var(--ink-soft)]">
+                      志望理由・強み・弱み・就活の軸・逆質問・想定問答・入室前メモ
+                    </p>
+                  </div>
+                  <Link
+                    href={`/companies/${id}/sheet`}
+                    target="_blank"
+                    className={`mt-6 flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition ${
+                      hasStarterPack
+                        ? "bg-[var(--gold)] text-[var(--navy)] hover:bg-[#50a8ff]"
+                        : "cursor-not-allowed bg-slate-200 text-slate-500 pointer-events-none"
+                    }`}
+                  >
+                    PDF用シートを開く
+                  </Link>
+                  {!content?.preInterviewMemo && !(content?.anticipatedQuestions?.length) && (
+                    <p className="mt-3 text-xs leading-6 text-[var(--muted)]">
+                      先に「再生成する」を押すと、想定問答が増えてPDFの内容もより充実します。
+                    </p>
+                  )}
+                </div>
+              )}
             </aside>
           </div>
         )}

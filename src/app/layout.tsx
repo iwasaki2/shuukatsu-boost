@@ -17,7 +17,7 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: "ガクチカBoost | AI面接対策ツール",
   description:
-    "プロフィールと企業情報を入力するだけで、志望理由・自己PR・逆質問など8種類の面接回答をAIが生成します。登録不要、2社まで無料。",
+    "プロフィールと企業情報を入力するだけで、志望理由・自己PR・逆質問など8種類の面接回答をAIが生成します。登録不要、1社まで無料。",
 };
 
 export default function RootLayout({

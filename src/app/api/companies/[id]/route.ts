@@ -13,6 +13,7 @@ type CompanyWithRelations = NonNullable<Awaited<ReturnType<typeof prisma.company
     weaknesses: string; careerPlan: string; reverseQuestions: string;
     closingStatement: string; finalInterviewDeepDive: string;
     competitorComparison: string; variations: string;
+    anticipatedQuestions: string; preInterviewMemo: string;
   } | null;
   esContent: { esSelfPR: string; esAppealPoints: string; esMotivation: string } | null;
 }>;
@@ -44,10 +45,27 @@ function serializeCompany(company: CompanyWithRelations) {
           finalInterviewDeepDive: company.generatedContent.finalInterviewDeepDive || undefined,
           competitorComparison: company.generatedContent.competitorComparison || undefined,
           variations: JSON.parse(company.generatedContent.variations),
+          anticipatedQuestions: JSON.parse(company.generatedContent.anticipatedQuestions || "[]"),
+          preInterviewMemo: company.generatedContent.preInterviewMemo || undefined,
         }
       : null,
     esContent: company.esContent ?? null,
   };
+}
+
+function normalizeStringList(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === "string" ? item.trim() : ""))
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  return "";
 }
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -109,6 +127,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
   });
 
   if (generatedContent !== undefined) {
+    const normalizedPreInterviewMemo = normalizeStringList(generatedContent.preInterviewMemo);
+
     await prisma.generatedContent.upsert({
       where: { companyId: id },
       update: {
@@ -123,6 +143,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
         finalInterviewDeepDive: generatedContent.finalInterviewDeepDive ?? "",
         competitorComparison: generatedContent.competitorComparison ?? "",
         variations: JSON.stringify(generatedContent.variations ?? {}),
+        anticipatedQuestions: JSON.stringify(generatedContent.anticipatedQuestions ?? []),
+        preInterviewMemo: normalizedPreInterviewMemo,
       },
       create: {
         companyId: id,
@@ -137,6 +159,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
         finalInterviewDeepDive: generatedContent.finalInterviewDeepDive ?? "",
         competitorComparison: generatedContent.competitorComparison ?? "",
         variations: JSON.stringify(generatedContent.variations ?? {}),
+        anticipatedQuestions: JSON.stringify(generatedContent.anticipatedQuestions ?? []),
+        preInterviewMemo: normalizedPreInterviewMemo,
       },
     });
   }

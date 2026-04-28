@@ -26,13 +26,13 @@ export const PLANS: Plan[] = [
     priceLabel: "¥0",
     description: "まず試してみたい方に",
     features: [
-      "企業2社まで登録",
+      "企業1社まで登録",
       "面接回答を自動生成",
       "プロフィール保存",
       "1次・2次面接対応",
     ],
     limits: {
-      maxCompanies: 2,
+      maxCompanies: 1,
       esGeneration: false,
       memorization: false,
       finalInterview: false,
@@ -90,4 +90,16 @@ export const PLANS: Plan[] = [
 
 export function getPlan(id: PlanId): Plan {
   return PLANS.find((p) => p.id === id) ?? PLANS[0];
+}
+
+export function isDevelopmentPlanBypass(): boolean {
+  return process.env.NODE_ENV !== "production";
+}
+
+export function getEffectivePlanId(planId: PlanId): PlanId {
+  return isDevelopmentPlanBypass() ? "executive" : planId;
+}
+
+export function getEffectivePlan(planId: PlanId): Plan {
+  return getPlan(getEffectivePlanId(planId));
 }

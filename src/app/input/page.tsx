@@ -251,7 +251,10 @@ function InputForm() {
         body: JSON.stringify(formData),
       });
 
-      if (!generateRes.ok) throw new Error("Generation failed");
+      if (!generateRes.ok) {
+        const errData = await generateRes.json().catch(() => null);
+        throw new Error(errData?.error ?? "生成に失敗しました。");
+      }
 
       const generatedContent = await generateRes.json();
 
@@ -305,8 +308,8 @@ function InputForm() {
       }
 
       router.push(`/companies/${companyId}`);
-    } catch {
-      setError("生成に失敗しました。もう一度お試しください。");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "生成に失敗しました。もう一度お試しください。");
       setLoading(false);
     }
   };

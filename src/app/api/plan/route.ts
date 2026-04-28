@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
-import type { PlanId } from "@/lib/plans";
+import { getEffectivePlanId, isDevelopmentPlanBypass, type PlanId } from "@/lib/plans";
 
 export async function GET() {
+  if (isDevelopmentPlanBypass()) {
+    return NextResponse.json({
+      planId: "executive" as PlanId,
+      status: "development-bypass",
+      currentPeriodEnd: null,
+    });
+  }
+
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ planId: "starter" as PlanId });
@@ -13,7 +21,7 @@ export async function GET() {
     where: { userId: session.userId },
   });
 
-  const planId = (userPlan?.planId ?? "starter") as PlanId;
+  const planId = getEffectivePlanId((userPlan?.planId ?? "starter") as PlanId);
   const isActive = !userPlan || userPlan.status === "active";
 
   return NextResponse.json({

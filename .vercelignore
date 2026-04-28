@@ -1,0 +1,16 @@
+.git
+.next
+.next.bak-*
+node_modules
+dev.db
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+.env
+.env.local
+.env.preview.local
+.env.vercel.local
+coverage
+.DS_Store
+tsconfig.tsbuildinfo

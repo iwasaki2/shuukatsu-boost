@@ -43,7 +43,7 @@ const serviceHighlights = [
 const metrics = [
   { value: "3ステップ", label: "入力から生成まで" },
   { value: "8種類", label: "自動生成コンテンツ" },
-  { value: "2社", label: "無料でお試し" },
+  { value: "1社", label: "無料でお試し" },
   { value: "24時間", label: "いつでも再生成" },
 ];
 
@@ -123,7 +123,7 @@ const plans = [
     name: "Starter",
     price: "¥0",
     note: "最初の導入に",
-    features: ["2社まで生成", "プロフィール保存", "1次面接対策"],
+    features: ["1社まで生成", "プロフィール保存", "1次面接対策"],
     featured: false,
   },
   {
@@ -159,7 +159,7 @@ export default function Home() {
 
       {/* ── Announcement bar ─────────────────────────────── */}
       <div className="border-b border-white/8 bg-[var(--navy)] py-2.5 text-center text-xs tracking-[0.14em] text-white/55">
-        登録不要 — 最初の2社分は
+        登録不要 — 最初の1社分は
         <span className="mx-1 font-semibold text-[var(--gold-soft)]">無料</span>
         でお試しいただけます
       </div>
@@ -358,11 +358,13 @@ export default function Home() {
             {serviceHighlights.map((item, index) => (
               <AnimateIn key={item.id} delay={index * 80}>
                 <article
-                  className={`group grid overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--paper)] shadow-[0_32px_80px_rgba(26,45,122,0.08)] transition duration-300 hover:shadow-[0_40px_100px_rgba(26,45,122,0.14)] lg:grid-cols-2 ${
-                    index % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
-                  }`}
+                  className="group grid overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--paper)] shadow-[0_32px_80px_rgba(26,45,122,0.08)] transition duration-300 hover:shadow-[0_40px_100px_rgba(26,45,122,0.14)] lg:grid-cols-2"
                 >
-                  <div className="relative min-h-[320px] overflow-hidden">
+                  <div
+                    className={`relative min-h-[320px] overflow-hidden ${
+                      index % 2 === 1 ? "lg:order-2" : ""
+                    }`}
+                  >
                     <div
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                       style={{ backgroundImage: `url('${item.image}')` }}
@@ -504,7 +506,7 @@ export default function Home() {
         <AnimateIn className="relative mx-auto max-w-5xl px-5 text-center lg:px-8">
           <p className="text-xs uppercase tracking-[0.38em] text-[var(--gold-soft)]">Start Your Preparation</p>
           <h2 className="mt-5 text-4xl font-bold leading-tight md:text-6xl">
-            まず2社分、
+            まず1社分、
             <br />
             無料で試してみてください。
           </h2>

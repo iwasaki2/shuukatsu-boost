@@ -212,7 +212,7 @@ function BillingContent() {
             <tbody>
               {[
                 { label: "面接回答の自動生成", starter: "✓", growth: "✓", executive: "✓" },
-                { label: "登録できる企業数", starter: "2社", growth: "無制限", executive: "無制限" },
+                { label: "登録できる企業数", starter: "1社", growth: "無制限", executive: "無制限" },
                 { label: "ES・書類対策（自己PR等）", starter: "—", growth: "✓", executive: "✓" },
                 { label: "暗記モード", starter: "—", growth: "✓", executive: "✓" },
                 { label: "一括削除・管理", starter: "—", growth: "✓", executive: "✓" },

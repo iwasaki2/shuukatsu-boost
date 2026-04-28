@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {
@@ -84,6 +84,8 @@ model GeneratedContent {
   finalInterviewDeepDive String   @default("")
   competitorComparison   String   @default("")
   variations             String   @default("{}")
+  anticipatedQuestions   String   @default("[]")
+  preInterviewMemo       String   @default("")
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

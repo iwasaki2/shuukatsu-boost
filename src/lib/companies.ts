@@ -6,6 +6,19 @@ export interface ReverseQuestion {
   question: string;
 }
 
+export interface AnticipatedQuestion {
+  category?: string;
+  intent?: string;
+  hook?: string;
+  question: string;
+  answerShort?: string;
+  answer: string;
+  followUps?: string[];
+  mustMention?: string[];
+  risk?: string;
+  pivot?: string;
+}
+
 export interface GeneratedContent {
   selfIntro: string;
   motivation: string;
@@ -15,6 +28,8 @@ export interface GeneratedContent {
   careerPlan: string;
   reverseQuestions: ReverseQuestion[];
   closingStatement: string;
+  anticipatedQuestions?: AnticipatedQuestion[];
+  preInterviewMemo?: string;
 }
 
 export interface EsContent {

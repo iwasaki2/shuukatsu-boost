@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
-import { getPlan, type PlanId } from "@/lib/plans";
+import { getEffectivePlan, isDevelopmentPlanBypass, type PlanId } from "@/lib/plans";
 
 function serializeCompany(company: {
   id: string;
@@ -114,9 +114,9 @@ export async function POST(request: Request) {
 
   const userPlan = await prisma.userPlan.findUnique({ where: { userId: session.userId } });
   const planId = (userPlan?.planId ?? "starter") as PlanId;
-  const plan = getPlan(planId);
+  const plan = getEffectivePlan(planId);
 
-  if (plan.limits.maxCompanies !== Infinity) {
+  if (!isDevelopmentPlanBypass() && plan.limits.maxCompanies !== Infinity) {
     const count = await prisma.company.count({ where: { userId: session.userId } });
     if (count >= plan.limits.maxCompanies) {
       return NextResponse.json(
